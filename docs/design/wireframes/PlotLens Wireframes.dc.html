@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f0eee9;font-family:system-ui,sans-serif}
+a{color:#2a6bd6}a:hover{color:#1a4fa0}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)}
+.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}
+.dv-next{margin:22px 0 0;font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.5)}
+.wf{background:#fff;color:#1a1a1a;font:400 11.5px/1.35 ui-sans-serif,system-ui,sans-serif;position:relative;display:flex;flex-direction:column}
+.wf-top{height:42px;border-bottom:1.5px solid #1a1a1a;display:flex;align-items:center;gap:12px;padding:0 12px;flex:none}
+.wf-map{flex:1;position:relative;background:#efece6;background-image:linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px);background-size:38px 38px;overflow:hidden}
+.wf-road{position:absolute;background:rgba(0,0,0,.15)}
+.wf-btn{border:1.2px solid rgba(0,0,0,.6);border-radius:4px;padding:4px 9px;background:#fff;font-size:11px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.wf-ico{width:30px;height:30px;border:1.2px solid rgba(0,0,0,.5);border-radius:5px;display:flex;align-items:center;justify-content:center;background:#fff;font-size:12px;flex:none}
+.wf-ico.on{background:#c8f06b;border:1.5px solid #1a1a1a}
+.wf-h{font:600 9px/1 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;color:rgba(0,0,0,.45)}
+.wf-r{display:flex;align-items:center;gap:8px}
+.wf-cbx{width:11px;height:11px;border:1.2px solid rgba(0,0,0,.6);border-radius:2px;flex:none}
+.wf-cbx.on{background:#c8f06b;border-color:#1a1a1a}
+.wf-rad{width:11px;height:11px;border:1.2px solid rgba(0,0,0,.6);border-radius:50%;flex:none}
+.wf-rad.on{background:radial-gradient(circle,#1a1a1a 0 3px,#fff 3px);border-color:#1a1a1a}
+.wf-sl{height:3px;background:rgba(0,0,0,.2);position:relative;border-radius:2px;flex:1}
+.wf-knob{position:absolute;top:-4.5px;width:11px;height:11px;border-radius:50%;background:#c8f06b;border:1.4px solid #1a1a1a}
+.wf-in{border:1.2px solid rgba(0,0,0,.5);border-radius:4px;padding:5px 8px;color:rgba(0,0,0,.45);background:#fff}
+.wf-cal{position:absolute;font-family:Caveat,cursive;font-size:16px;line-height:1.15;color:#2a6bd6;z-index:5}
+.wf-pin{position:absolute;width:13px;height:13px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#c8f06b;border:1.5px solid #1a1a1a}
+.wf-card{border:1.3px solid #1a1a1a;background:#fff;border-radius:6px}
+.wf-thumb{background:#efece6;background-image:linear-gradient(rgba(0,0,0,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.06) 1px,transparent 1px);background-size:16px 16px;position:relative;overflow:hidden}
+.wf-tt{position:absolute;background:#1a1a1a;color:#fff;font-size:9.5px;padding:3px 6px;border-radius:3px;white-space:nowrap}
+</style></helmet>
+
+<section class="dv-turn" id="t3">
+<div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Image overlay workflow, refined layers panel, and a precision pass over the workspace</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="3a">
+<div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Overlay selected — direct manipulation with a floating contextual bar</div>
+<div class="dv-card">
+<div class="wf" style="width:860px;height:520px">
+  <div class="wf-map">
+    <div class="wf-road" style="left:-40px;top:250px;width:960px;height:7px;transform:rotate(-5deg)"></div>
+    <div class="wf-road" style="left:300px;top:-60px;width:6px;height:700px;transform:rotate(8deg)"></div>
+    <div class="wf-road" style="left:640px;top:-40px;width:5px;height:680px;transform:rotate(-12deg)"></div>
+
+    <div style="position:absolute;left:170px;top:100px;width:340px;height:250px;transform:rotate(-7deg);outline:1px solid #2a6bd6;outline-offset:0">
+      <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(0,0,0,.14) 0 3px,transparent 3px 8px),#fffdf6;opacity:{{ opacityAlpha }};mix-blend-mode:{{ blendCss }}"></div>
+      <div style="position:absolute;left:7px;top:6px;font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:rgba(0,0,0,.45);font-family:ui-monospace,Menlo,monospace">1995 survey · sheet 4</div>
+      <sc-if value="{{ showHandles }}" hint-placeholder-val="{{ true }}">
+        <div style="position:absolute;left:-4px;top:-4px;width:7px;height:7px;background:#fff;border:1.2px solid #2a6bd6"></div>
+        <div style="position:absolute;right:-4px;top:-4px;width:7px;height:7px;background:#fff;border:1.2px solid #2a6bd6"></div>
+        <div style="position:absolute;left:-4px;bottom:-4px;width:7px;height:7px;background:#fff;border:1.2px solid #2a6bd6"></div>
+        <div style="position:absolute;right:-4px;bottom:-4px;width:7px;height:7px;background:#fff;border:1.2px solid #2a6bd6"></div>
+        <div style="position:absolute;left:calc(50% - 3.5px);top:-4px;width:7px;height:7px;background:#fff;border:1.2px solid #2a6bd6"></div>
+        <div style="position:absolute;left:calc(50% - 3.5px);bottom:-4px;width:7px;height:7px;background:#fff;border:1.2px solid #2a6bd6"></div>
+        <div style="position:absolute;left:-4px;top:calc(50% - 3.5px);width:7px;height:7px;background:#fff;border:1.2px solid #2a6bd6"></div>
+        <div style="position:absolute;right:-4px;top:calc(50% - 3.5px);width:7px;height:7px;background:#fff;border:1.2px solid #2a6bd6"></div>
+        <div style="position:absolute;left:50%;top:-24px;width:1px;height:20px;background:#2a6bd6"></div>
+        <div style="position:absolute;left:calc(50% - 6px);top:-36px;width:12px;height:12px;border-radius:50%;border:1.2px solid #2a6bd6;background:#fff;font-size:8px;line-height:11px;text-align:center;color:#2a6bd6">↺</div>
+      </sc-if>
+      <div style="position:absolute;right:-1px;bottom:-17px;font-family:ui-monospace,Menlo,monospace;font-size:9px;color:#2a6bd6">−7.0°  ·  118%</div>
+    </div>
+
+    <div style="position:absolute;left:24px;top:400px;display:flex;align-items:center;gap:0;background:rgba(255,255,255,.96);border:1px solid rgba(0,0,0,.2);border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,.08);font-size:10.5px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:7px;padding:0 10px;height:30px;border-right:1px solid rgba(0,0,0,.12)">
+        <span style="font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.08em;color:rgba(0,0,0,.45)">OPACITY</span>
+        <div class="wf-sl" style="width:78px;height:2px"><div class="wf-knob" style="left:{{ knobLeft }};width:8px;height:8px;top:-3px"></div></div>
+        <span style="font-family:ui-monospace,Menlo,monospace;width:26px;text-align:right">{{ opacityPct }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;padding:0 9px;height:30px;border-right:1px solid rgba(0,0,0,.12)">
+        <span class="wf-ico" style="width:20px;height:20px;border-color:transparent;font-size:10px">↺</span>
+        <span style="font-family:ui-monospace,Menlo,monospace;color:rgba(0,0,0,.6)">−7.0°</span>
+        <span class="wf-ico" style="width:20px;height:20px;border-color:transparent;font-size:10px">↻</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;padding:0 9px;height:30px;border-right:1px solid rgba(0,0,0,.12)">
+        <span class="wf-ico" style="width:20px;height:20px;border-color:transparent;font-size:10px">−</span>
+        <span style="font-family:ui-monospace,Menlo,monospace;color:rgba(0,0,0,.6)">118%</span>
+        <span class="wf-ico" style="width:20px;height:20px;border-color:transparent;font-size:10px">+</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;padding:0 9px;height:30px;border-right:1px solid rgba(0,0,0,.12)">
+        <span style="font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.08em;color:rgba(0,0,0,.45)">BLEND</span>
+        <span style="border:1px solid rgba(0,0,0,.35);border-radius:2px;padding:2px 5px;background:{{ blendNormalBg }}">Normal</span>
+        <span style="border:1px solid rgba(0,0,0,.2);border-radius:2px;padding:2px 5px;background:{{ blendMultiplyBg }};color:rgba(0,0,0,.6)">Multiply</span>
+        <span style="border:1px solid rgba(0,0,0,.2);border-radius:2px;padding:2px 5px;background:{{ blendScreenBg }};color:rgba(0,0,0,.6)">Screen</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:2px;padding:0 7px;height:30px">
+        <span class="wf-ico" style="width:22px;height:22px;border-color:transparent;font-size:10px">✥</span>
+        <span class="wf-ico" style="width:22px;height:22px;border-color:transparent;font-size:10px">👁</span>
+        <span class="wf-ico" style="width:22px;height:22px;border-color:transparent;font-size:10px">🔒</span>
+        <span class="wf-ico" style="width:22px;height:22px;border-color:transparent;font-size:10px">⋯</span>
+      </div>
+    </div>
+
+    <div style="position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px">
+      <span class="wf-ico" style="width:24px;height:24px;border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)">+</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)">−</span>
+      <span class="wf-ico" style="width:24px;height:24px;margin-top:4px;border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)">N↑</span>
+    </div>
+    <div style="position:absolute;left:10px;bottom:10px;font-size:9.5px;color:rgba(0,0,0,.5)"><div style="width:70px;border-bottom:1.5px solid rgba(0,0,0,.5);border-left:1.5px solid rgba(0,0,0,.5);border-right:1.5px solid rgba(0,0,0,.5);height:4px"></div>500 m</div>
+    <div style="position:absolute;right:10px;bottom:10px;font-family:ui-monospace,Menlo,monospace;font-size:9px;color:rgba(0,0,0,.45)">27.1751, 78.0421 · z14</div>
+    <sc-if value="{{ showCallouts }}" hint-placeholder-val="{{ true }}">
+      <div class="wf-cal" style="left:560px;top:130px;width:230px">bar follows the selection —<br>no dialog, no side trip</div>
+      <div class="wf-cal" style="left:560px;top:300px;width:250px">roads stay legible through the sheet;<br>Esc deselects, ⌘Z steps back</div>
+    </sc-if>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="3b">
+<div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a>Overlay workflow — the nine steps as states</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;max-width:880px">
+
+<div class="dv-card"><div class="wf" style="width:280px;height:190px">
+  <div class="wf-map">
+    <div class="wf-road" style="left:-20px;top:110px;width:340px;height:5px;transform:rotate(-6deg)"></div>
+    <div style="position:absolute;right:6px;top:6px;display:flex;flex-direction:column;gap:3px;padding:4px;border:1px solid rgba(0,0,0,.18);background:#fdfdfc;border-radius:3px">
+      <span class="wf-ico" style="width:20px;height:20px;border-color:transparent;font-size:10px">◉</span>
+      <span class="wf-ico" style="width:20px;height:20px;border-color:transparent;font-size:10px">⬠</span>
+      <span class="wf-ico on" style="width:20px;height:20px;font-size:10px">🖼</span>
+    </div>
+    <div class="wf-tt" style="right:36px;top:52px">Image overlay — O</div>
+    <div style="position:absolute;left:8px;bottom:8px;font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.08em;color:rgba(0,0,0,.45)">1 · TOOL ARMED</div>
+  </div>
+</div></div>
+
+<div class="dv-card"><div class="wf" style="width:280px;height:190px">
+  <div class="wf-map">
+    <div class="wf-road" style="left:-20px;top:110px;width:340px;height:5px;transform:rotate(-6deg)"></div>
+    <div style="position:absolute;inset:26px 30px 34px;border:1.4px dashed #2a6bd6;border-radius:4px;background:rgba(255,255,255,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px">
+      <div style="font-weight:600;font-size:11px">Drop image here</div>
+      <div style="font-size:10px;color:rgba(0,0,0,.5)">JPG · PNG · PDF page — stays local</div>
+      <span class="wf-btn" style="font-size:10px;padding:3px 8px">Browse</span>
+    </div>
+    <div style="position:absolute;left:8px;bottom:8px;font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.08em;color:rgba(0,0,0,.45)">2 · UPLOAD</div>
+  </div>
+</div></div>
+
+<div class="dv-card"><div class="wf" style="width:280px;height:190px">
+  <div class="wf-map">
+    <div class="wf-road" style="left:-20px;top:110px;width:340px;height:5px;transform:rotate(-6deg)"></div>
+    <div style="position:absolute;left:60px;top:45px;width:160px;height:100px;border:1px solid rgba(0,0,0,.3);background:rgba(255,255,255,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+      <div style="font-size:10.5px">Preparing image…</div>
+      <div style="width:100px;height:3px;background:rgba(0,0,0,.14)"><div style="width:62%;height:100%;background:#1a1a1a"></div></div>
+    </div>
+    <div style="position:absolute;left:8px;bottom:8px;font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.08em;color:rgba(0,0,0,.45)">3 · PROCESSING</div>
+  </div>
+</div></div>
+
+<div class="dv-card"><div class="wf" style="width:280px;height:190px">
+  <div class="wf-map">
+    <div class="wf-road" style="left:-20px;top:110px;width:340px;height:5px;transform:rotate(-6deg)"></div>
+    <div style="position:absolute;left:52px;top:40px;width:170px;height:110px;outline:1px solid #2a6bd6;background:repeating-linear-gradient(135deg,rgba(0,0,0,.13) 0 3px,transparent 3px 8px),rgba(255,253,246,.95)">
+      <div style="position:absolute;left:-4px;top:-4px;width:7px;height:7px;background:#fff;border:1.2px solid #2a6bd6"></div>
+      <div style="position:absolute;right:-4px;top:-4px;width:7px;height:7px;background:#fff;border:1.2px solid #2a6bd6"></div>
+      <div style="position:absolute;left:-4px;bottom:-4px;width:7px;height:7px;background:#fff;border:1.2px solid #2a6bd6"></div>
+      <div style="position:absolute;right:-4px;bottom:-4px;width:7px;height:7px;background:#fff;border:1.2px solid #2a6bd6"></div>
+    </div>
+    <div style="position:absolute;left:8px;bottom:8px;font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.08em;color:rgba(0,0,0,.45)">4 · PLACED · 100%</div>
+  </div>
+</div></div>
+
+<div class="dv-card"><div class="wf" style="width:280px;height:190px">
+  <div class="wf-map">
+    <div class="wf-road" style="left:-20px;top:110px;width:340px;height:5px;transform:rotate(-6deg)"></div>
+    <div class="wf-road" style="left:140px;top:-20px;width:4px;height:230px;transform:rotate(9deg)"></div>
+    <div style="position:absolute;left:52px;top:40px;width:170px;height:110px;outline:1px solid #2a6bd6;background:repeating-linear-gradient(135deg,rgba(0,0,0,.13) 0 3px,transparent 3px 8px),#fffdf6;opacity:.42"></div>
+    <div style="position:absolute;left:52px;top:158px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.96);border:1px solid rgba(0,0,0,.2);border-radius:3px;padding:3px 7px;font-size:10px">
+      <span style="font-family:ui-monospace,Menlo,monospace;font-size:8.5px;letter-spacing:.08em;color:rgba(0,0,0,.45)">OPACITY</span>
+      <div class="wf-sl" style="width:60px;height:2px"><div class="wf-knob" style="left:42%;width:8px;height:8px;top:-3px"></div></div>
+      <span style="font-family:ui-monospace,Menlo,monospace">42%</span>
+    </div>
+    <div style="position:absolute;left:8px;bottom:8px;font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.08em;color:rgba(0,0,0,.45)">5 · OPACITY</div>
+  </div>
+</div></div>
+
+<div class="dv-card"><div class="wf" style="width:280px;height:190px">
+  <div class="wf-map">
+    <div class="wf-road" style="left:-20px;top:110px;width:340px;height:5px;transform:rotate(-6deg)"></div>
+    <div style="position:absolute;left:38px;top:34px;width:170px;height:110px;border:1px dotted rgba(42,107,214,.5)"></div>
+    <div style="position:absolute;left:66px;top:48px;width:170px;height:110px;outline:1px solid #2a6bd6;background:repeating-linear-gradient(135deg,rgba(0,0,0,.13) 0 3px,transparent 3px 8px),#fffdf6;opacity:.5"></div>
+    <div style="position:absolute;left:120px;top:88px;font-size:11px;color:#2a6bd6">✥</div>
+    <div style="position:absolute;left:66px;top:164px;font-family:ui-monospace,Menlo,monospace;font-size:9px;color:#2a6bd6">Δ +28, +14 px</div>
+    <div style="position:absolute;left:8px;bottom:8px;font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.08em;color:rgba(0,0,0,.45)">6 · DRAG</div>
+  </div>
+</div></div>
+
+<div class="dv-card"><div class="wf" style="width:280px;height:190px">
+  <div class="wf-map">
+    <div class="wf-road" style="left:-20px;top:110px;width:340px;height:5px;transform:rotate(-6deg)"></div>
+    <div style="position:absolute;left:60px;top:44px;width:170px;height:105px;transform:rotate(-9deg);outline:1px solid #2a6bd6;background:repeating-linear-gradient(135deg,rgba(0,0,0,.13) 0 3px,transparent 3px 8px),#fffdf6;opacity:.5">
+      <div style="position:absolute;left:50%;top:-20px;width:1px;height:16px;background:#2a6bd6"></div>
+      <div style="position:absolute;left:calc(50% - 5px);top:-30px;width:10px;height:10px;border-radius:50%;border:1.2px solid #2a6bd6;background:#fff"></div>
+    </div>
+    <div style="position:absolute;left:150px;top:160px;font-family:ui-monospace,Menlo,monospace;font-size:9px;color:#2a6bd6">−9.0°  ⇧ snaps 15°</div>
+    <div style="position:absolute;left:8px;bottom:8px;font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.08em;color:rgba(0,0,0,.45)">7 · ROTATE</div>
+  </div>
+</div></div>
+
+<div class="dv-card"><div class="wf" style="width:280px;height:190px">
+  <div class="wf-map">
+    <div class="wf-road" style="left:-20px;top:110px;width:340px;height:5px;transform:rotate(-6deg)"></div>
+    <div style="position:absolute;left:44px;top:32px;width:200px;height:126px;outline:1px solid #2a6bd6;background:repeating-linear-gradient(135deg,rgba(0,0,0,.13) 0 3px,transparent 3px 8px),#fffdf6;opacity:.5">
+      <div style="position:absolute;right:-4px;bottom:-4px;width:7px;height:7px;background:#2a6bd6"></div>
+      <div style="position:absolute;right:-46px;bottom:-16px;font-family:ui-monospace,Menlo,monospace;font-size:9px;color:#2a6bd6">118%</div>
+    </div>
+    <div style="position:absolute;left:8px;bottom:8px;font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.08em;color:rgba(0,0,0,.45)">8 · SCALE ⇧ = keep ratio</div>
+  </div>
+</div></div>
+
+<div class="dv-card"><div class="wf" style="width:280px;height:190px">
+  <div class="wf-map">
+    <div class="wf-road" style="left:-20px;top:110px;width:340px;height:5px;transform:rotate(-6deg)"></div>
+    <div style="position:absolute;left:52px;top:40px;width:180px;height:112px;transform:rotate(-7deg);outline:1px solid rgba(0,0,0,.25);background:repeating-linear-gradient(135deg,rgba(0,0,0,.13) 0 3px,transparent 3px 8px),#fffdf6;opacity:.42">
+      <div style="position:absolute;right:4px;top:3px;font-size:9px;color:rgba(0,0,0,.5)">🔒</div>
+    </div>
+    <div style="position:absolute;left:52px;bottom:24px;display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.96);border:1px solid rgba(0,0,0,.2);border-radius:3px;padding:4px 8px;font-size:10px">
+      <span>Overlay locked · saved to project</span><span style="color:rgba(0,0,0,.45);text-decoration:underline">Unlock</span>
+    </div>
+    <div style="position:absolute;left:8px;bottom:6px;font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.08em;color:rgba(0,0,0,.45)">9 · LOCK + SAVE</div>
+  </div>
+</div></div>
+
+</div>
+</div>
+
+<div class="dv-opt" id="3c">
+<div class="dv-olabel"><a class="dv-oid" href="#3c">3c</a>Layers panel — refined stack, one row expanded on selection</div>
+<div class="dv-card">
+<div class="wf" style="width:238px;height:520px;background:#fdfdfc">
+  <div class="wf-r" style="padding:8px 10px;justify-content:space-between;border-bottom:1px solid rgba(0,0,0,.14)">
+    <span class="wf-h" style="color:rgba(0,0,0,.45)">Layers</span>
+    <span class="wf-r" style="gap:7px;color:rgba(0,0,0,.35);font-size:10px"><span>⇅</span><span>+</span><span>«</span></span>
+  </div>
+  <div style="padding:8px 0 10px;display:flex;flex-direction:column;gap:2px;font-size:11px;flex:1;overflow:hidden">
+
+    <div class="wf-h" style="color:rgba(0,0,0,.32);padding:6px 10px 3px">Base map</div>
+    <div class="wf-r" style="gap:7px;padding:3px 10px"><span class="wf-rad" style="width:9px;height:9px"></span>Streets</div>
+    <div class="wf-r" style="gap:7px;padding:3px 10px"><span class="wf-rad on" style="width:9px;height:9px"></span>Satellite<span style="margin-left:auto;font-family:ui-monospace,Menlo,monospace;font-size:8.5px;color:rgba(0,0,0,.3)">ESRI</span></div>
+
+    <div class="wf-h" style="color:rgba(0,0,0,.32);padding:9px 10px 3px">Government</div>
+    <div style="border-left:2px solid #1a1a1a;background:rgba(0,0,0,.035)">
+      <div class="wf-r" style="gap:7px;padding:4px 10px 4px 8px">
+        <span style="color:rgba(0,0,0,.3);font-size:9px">⋮⋮</span><span class="wf-cbx on" style="width:9px;height:9px"></span>
+        <span style="font-weight:600">Proposed Roads</span>
+        <span style="margin-left:auto;width:14px;border-top:2px solid #1a1a1a"></span>
+      </div>
+      <div style="padding:1px 10px 8px 34px;display:flex;flex-direction:column;gap:6px">
+        <div class="wf-r" style="gap:6px"><span style="font-family:ui-monospace,Menlo,monospace;font-size:8.5px;letter-spacing:.07em;color:rgba(0,0,0,.4)">OPACITY</span><div class="wf-sl" style="height:2px"><div class="wf-knob" style="left:70%;width:8px;height:8px;top:-3px"></div></div><span style="font-family:ui-monospace,Menlo,monospace;font-size:9px">70%</span></div>
+        <div style="font-size:10px;color:rgba(0,0,0,.5);line-height:1.4">Government dataset · published 2025<br>Checked Aug 10, 2026</div>
+        <div class="wf-r" style="gap:10px;font-size:10px;color:rgba(0,0,0,.55)"><span style="text-decoration:underline">Source details</span><span style="text-decoration:underline">Zoom to</span></div>
+      </div>
+    </div>
+    <div class="wf-r" style="gap:7px;padding:4px 10px 4px 8px"><span style="color:rgba(0,0,0,.2);font-size:9px">⋮⋮</span><span class="wf-cbx on" style="width:9px;height:9px"></span>Master Plan<span style="margin-left:auto;width:14px;border-top:2px solid #1a1a1a"></span></div>
+    <div class="wf-r" style="gap:7px;padding:4px 10px 4px 8px;color:rgba(0,0,0,.55)"><span style="color:rgba(0,0,0,.2);font-size:9px">⋮⋮</span><span class="wf-cbx" style="width:9px;height:9px"></span>Zoning<span style="margin-left:auto;width:14px;border-top:2px solid rgba(0,0,0,.35)"></span></div>
+    <div class="wf-r" style="gap:7px;padding:4px 10px 4px 8px;color:rgba(0,0,0,.35)"><span style="color:rgba(0,0,0,.15);font-size:9px">⋮⋮</span><span class="wf-cbx" style="width:9px;height:9px"></span>Parcels<span style="margin-left:auto;font-size:9px">unavailable</span></div>
+
+    <div class="wf-h" style="color:rgba(0,0,0,.32);padding:9px 10px 3px">My data</div>
+    <div class="wf-r" style="gap:7px;padding:4px 10px 4px 8px"><span style="color:rgba(0,0,0,.2);font-size:9px">⋮⋮</span><span class="wf-cbx on" style="width:9px;height:9px"></span>Properties<span style="margin-left:auto;width:14px;border-top:2px dashed #1a1a1a"></span></div>
+    <div class="wf-r" style="gap:7px;padding:4px 10px 4px 8px"><span style="color:rgba(0,0,0,.2);font-size:9px">⋮⋮</span><span class="wf-cbx on" style="width:9px;height:9px"></span>Annotations<span style="margin-left:auto;width:14px;border-top:2px dashed #1a1a1a"></span></div>
+    <div class="wf-r" style="gap:7px;padding:4px 10px 4px 8px"><span style="color:rgba(0,0,0,.2);font-size:9px">⋮⋮</span><span class="wf-cbx on" style="width:9px;height:9px"></span>Measurements<span style="margin-left:auto;width:14px;border-top:2px dashed #1a1a1a"></span></div>
+
+    <div class="wf-h" style="color:rgba(0,0,0,.32);padding:9px 10px 3px">Overlays</div>
+    <div class="wf-r" style="gap:7px;padding:4px 10px 4px 8px"><span style="color:rgba(0,0,0,.2);font-size:9px">⋮⋮</span><span class="wf-cbx on" style="width:9px;height:9px"></span>1995 Survey Map<span style="margin-left:auto;width:14px;border-top:2px dotted #1a1a1a"></span></div>
+    <div class="wf-r" style="gap:6px;padding:0 10px 0 34px"><div class="wf-sl" style="height:2px"><div class="wf-knob" style="left:{{ knobLeft }};width:8px;height:8px;top:-3px"></div></div><span style="font-family:ui-monospace,Menlo,monospace;font-size:9px">{{ opacityPct }}</span></div>
+    <div class="wf-r" style="gap:7px;padding:4px 10px 4px 8px;color:rgba(0,0,0,.55)"><span style="color:rgba(0,0,0,.15);font-size:9px">⋮⋮</span><span class="wf-cbx" style="width:9px;height:9px"></span>Historical Map<span style="margin-left:auto;width:14px;border-top:2px dotted rgba(0,0,0,.35)"></span></div>
+  </div>
+  <div style="padding:7px 10px;border-top:1px solid rgba(0,0,0,.14);font-size:9.5px;color:rgba(0,0,0,.42);display:flex;gap:9px">
+    <span class="wf-r" style="gap:4px"><span style="width:11px;border-top:2px solid #1a1a1a"></span>official</span>
+    <span class="wf-r" style="gap:4px"><span style="width:11px;border-top:2px dashed #1a1a1a"></span>mine</span>
+    <span class="wf-r" style="gap:4px"><span style="width:11px;border-top:2px dotted #1a1a1a"></span>approx.</span>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="3d">
+<div class="dv-olabel"><a class="dv-oid" href="#3d">3d</a>Workspace with both applied — precision pass (spacing, mono numerics, quiet contrast)</div>
+<div class="dv-card">
+<div class="wf" style="width:1000px;height:620px">
+  <div class="wf-top" style="height:34px;border-bottom:1px solid rgba(0,0,0,.16);gap:9px;font-size:11px">
+    <span style="font-weight:700">PlotLens</span><span style="color:rgba(0,0,0,.25)">/</span>
+    <span style="color:rgba(0,0,0,.72)">Agra Ring Road Investigation ▾</span>
+    <div style="flex:1;max-width:260px;margin:0 auto;padding:3px 8px;border:1px solid rgba(0,0,0,.18);border-radius:3px;color:rgba(0,0,0,.38)">⌕  Search location</div>
+    <div class="wf-r" style="gap:11px;color:rgba(0,0,0,.5);font-size:10.5px"><span style="font-family:ui-monospace,Menlo,monospace;font-size:9.5px">✓ SAVED 12:04</span><span>Share</span><span>Export</span><span>⋯</span></div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:200px;border-right:1px solid rgba(0,0,0,.14);background:#fdfdfc;flex:none;display:flex;flex-direction:column;font-size:11px">
+      <div class="wf-r" style="padding:7px 10px;justify-content:space-between"><span class="wf-h" style="color:rgba(0,0,0,.42)">Layers</span><span class="wf-r" style="gap:7px;color:rgba(0,0,0,.3);font-size:10px"><span>⇅</span><span>+</span><span>«</span></span></div>
+      <div style="display:flex;flex-direction:column;gap:2px;padding-bottom:8px">
+        <div class="wf-h" style="color:rgba(0,0,0,.3);padding:5px 10px 3px">Base map</div>
+        <div class="wf-r" style="gap:7px;padding:3px 10px"><span class="wf-rad" style="width:9px;height:9px"></span>Streets</div>
+        <div class="wf-r" style="gap:7px;padding:3px 10px"><span class="wf-rad on" style="width:9px;height:9px"></span>Satellite</div>
+        <div class="wf-h" style="color:rgba(0,0,0,.3);padding:9px 10px 3px">Government</div>
+        <div class="wf-r" style="gap:7px;padding:3px 10px"><span class="wf-cbx on" style="width:9px;height:9px"></span>Proposed Roads<span style="margin-left:auto;width:13px;border-top:2px solid #1a1a1a"></span></div>
+        <div class="wf-r" style="gap:7px;padding:3px 10px"><span class="wf-cbx on" style="width:9px;height:9px"></span>Master Plan<span style="margin-left:auto;width:13px;border-top:2px solid #1a1a1a"></span></div>
+        <div class="wf-r" style="gap:7px;padding:3px 10px;color:rgba(0,0,0,.5)"><span class="wf-cbx" style="width:9px;height:9px"></span>Zoning</div>
+        <div class="wf-h" style="color:rgba(0,0,0,.3);padding:9px 10px 3px">My data</div>
+        <div class="wf-r" style="gap:7px;padding:3px 10px"><span class="wf-cbx on" style="width:9px;height:9px"></span>Properties<span style="margin-left:auto;width:13px;border-top:2px dashed #1a1a1a"></span></div>
+        <div class="wf-r" style="gap:7px;padding:3px 10px"><span class="wf-cbx on" style="width:9px;height:9px"></span>Annotations<span style="margin-left:auto;width:13px;border-top:2px dashed #1a1a1a"></span></div>
+        <div class="wf-r" style="gap:7px;padding:3px 10px"><span class="wf-cbx on" style="width:9px;height:9px"></span>Measurements<span style="margin-left:auto;width:13px;border-top:2px dashed #1a1a1a"></span></div>
+        <div class="wf-h" style="color:rgba(0,0,0,.3);padding:9px 10px 3px">Overlays</div>
+        <div style="border-left:2px solid #1a1a1a;background:rgba(0,0,0,.035)">
+          <div class="wf-r" style="gap:7px;padding:3px 10px 3px 8px"><span class="wf-cbx on" style="width:9px;height:9px"></span><span style="font-weight:600">1995 Survey Map</span><span style="margin-left:auto;width:13px;border-top:2px dotted #1a1a1a"></span></div>
+          <div class="wf-r" style="gap:6px;padding:3px 10px 8px 27px"><div class="wf-sl" style="height:2px"><div class="wf-knob" style="left:{{ knobLeft }};width:8px;height:8px;top:-3px"></div></div><span style="font-family:ui-monospace,Menlo,monospace;font-size:9px">{{ opacityPct }}</span></div>
+        </div>
+      </div>
+      <div style="margin-top:auto;padding:7px 10px;border-top:1px solid rgba(0,0,0,.14);font-size:9.5px;color:rgba(0,0,0,.42);display:flex;gap:9px">
+        <span class="wf-r" style="gap:4px"><span style="width:11px;border-top:2px solid #1a1a1a"></span>official</span>
+        <span class="wf-r" style="gap:4px"><span style="width:11px;border-top:2px dashed #1a1a1a"></span>mine</span>
+        <span class="wf-r" style="gap:4px"><span style="width:11px;border-top:2px dotted #1a1a1a"></span>approx.</span>
+      </div>
+    </div>
+
+    <div class="wf-map">
+      <div class="wf-road" style="left:-40px;top:210px;width:1000px;height:7px;transform:rotate(-6deg)"></div>
+      <div class="wf-road" style="left:250px;top:-60px;width:6px;height:760px;transform:rotate(9deg)"></div>
+      <div class="wf-road" style="left:560px;top:-40px;width:5px;height:740px;transform:rotate(-13deg)"></div>
+      <div style="position:absolute;left:-30px;top:140px;width:900px;height:0;border-top:2.5px solid #c8a13a;transform:rotate(-9deg)"></div>
+      <div style="position:absolute;left:110px;top:120px;width:300px;height:210px;transform:rotate(-7deg);outline:1px solid rgba(42,107,214,.55);background:repeating-linear-gradient(135deg,rgba(0,0,0,.13) 0 3px,transparent 3px 8px),#fffdf6;opacity:{{ opacityAlpha }};mix-blend-mode:{{ blendCss }}"></div>
+      <div style="position:absolute;left:180px;top:300px;width:200px;height:140px;border:1.5px dashed #1a1a1a;background:rgba(200,240,107,.2)"></div>
+      <span class="wf-pin" style="left:260px;top:350px"></span>
+      <div style="position:absolute;left:196px;top:262px;background:rgba(255,255,255,.96);border:1px solid rgba(0,0,0,.18);border-radius:3px;padding:3px 6px;font-size:10px;font-family:ui-monospace,Menlo,monospace">12,345 m² · 1.23 ha</div>
+      <div style="position:absolute;right:10px;bottom:44px;display:flex;flex-direction:column;gap:4px">
+        <span class="wf-ico" style="width:24px;height:24px;border-color:rgba(0,0,0,.22);background:rgba(255,255,255,.88)">+</span>
+        <span class="wf-ico" style="width:24px;height:24px;border-color:rgba(0,0,0,.22);background:rgba(255,255,255,.88)">−</span>
+        <span class="wf-ico" style="width:24px;height:24px;margin-top:4px;border-color:rgba(0,0,0,.22);background:rgba(255,255,255,.88)">N↑</span>
+      </div>
+      <div style="position:absolute;left:10px;bottom:10px;font-size:9.5px;color:rgba(0,0,0,.5)"><div style="width:70px;border-bottom:1.5px solid rgba(0,0,0,.5);border-left:1.5px solid rgba(0,0,0,.5);border-right:1.5px solid rgba(0,0,0,.5);height:4px"></div>500 m</div>
+      <div style="position:absolute;right:10px;bottom:10px;font-family:ui-monospace,Menlo,monospace;font-size:9px;color:rgba(0,0,0,.42)">27.1751, 78.0421 · z14</div>
+    </div>
+
+    <div style="width:34px;border-left:1px solid rgba(0,0,0,.14);background:#fdfdfc;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0;flex:none">
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">◉</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">╱</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">⬠</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">↔</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">▦</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">✎</span>
+      <span class="wf-ico on" style="width:24px;height:24px;font-size:11px">🖼</span>
+      <div style="flex:1"></div>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">↶</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">↷</span>
+      <span style="color:rgba(0,0,0,.28);font-size:10px">»</span>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "tune overlay opacity/blend in Tweaks and lock it in" · "show the source-details flyout from <a class="dv-oid" href="#3c">3c</a>" · "take <a class="dv-oid" href="#3d">3d</a> to hi-fi dark"</p>
+</section>
+
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Map workspace redesigned — quieter chrome, narrower panels, full collapse (replaces <a class="dv-oid" href="#1a">1a</a>)</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="2a">
+<div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Both panels open — 176px layers, 34px rail, hairline borders, 34px top bar</div>
+<div class="dv-card">
+<div class="wf" style="width:1000px;height:620px">
+  <div class="wf-top" style="height:34px;border-bottom:1px solid rgba(0,0,0,.22);gap:9px;font-size:11px">
+    <span style="font-weight:700;letter-spacing:.01em">PlotLens</span>
+    <span style="color:rgba(0,0,0,.3)">/</span>
+    <span style="color:rgba(0,0,0,.75)">Agra Ring Road Investigation ▾</span>
+    <div style="flex:1;max-width:260px;margin:0 auto;padding:3px 8px;border:1px solid rgba(0,0,0,.22);border-radius:3px;color:rgba(0,0,0,.4)">⌕  Search location</div>
+    <div class="wf-r" style="gap:10px;color:rgba(0,0,0,.55);font-size:10.5px"><span>✓ Saved</span><span>Share</span><span>Export</span><span>⋯</span></div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:176px;border-right:1px solid rgba(0,0,0,.18);display:flex;flex-direction:column;flex:none;background:#fdfdfc">
+      <div class="wf-r" style="padding:7px 10px;justify-content:space-between"><span class="wf-h">Layers</span><span style="color:rgba(0,0,0,.35);font-size:10px">«</span></div>
+      <div style="padding:2px 10px 10px;display:flex;flex-direction:column;gap:11px;flex:1;font-size:11px">
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="wf-h" style="color:rgba(0,0,0,.35)">Base</div>
+          <div class="wf-r" style="gap:6px"><span class="wf-rad" style="width:9px;height:9px"></span>Streets</div>
+          <div class="wf-r" style="gap:6px"><span class="wf-rad on" style="width:9px;height:9px"></span>Satellite</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="wf-h" style="color:rgba(0,0,0,.35)">Government</div>
+          <div class="wf-r" style="gap:6px"><span class="wf-cbx on" style="width:9px;height:9px"></span>Proposed Roads<span style="margin-left:auto;color:rgba(0,0,0,.28);font-size:9px">ⓘ</span></div>
+          <div class="wf-r" style="padding-left:15px;gap:5px"><div class="wf-sl" style="height:2px"><div class="wf-knob" style="left:70%;width:8px;height:8px;top:-3px"></div></div></div>
+          <div class="wf-r" style="gap:6px"><span class="wf-cbx on" style="width:9px;height:9px"></span>Master Plan<span style="margin-left:auto;color:rgba(0,0,0,.28);font-size:9px">ⓘ</span></div>
+          <div class="wf-r" style="gap:6px;color:rgba(0,0,0,.55)"><span class="wf-cbx" style="width:9px;height:9px"></span>Zoning</div>
+          <div class="wf-r" style="gap:6px;color:rgba(0,0,0,.4)"><span class="wf-cbx" style="width:9px;height:9px"></span>Parcels</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="wf-h" style="color:rgba(0,0,0,.35)">My data</div>
+          <div class="wf-r" style="gap:6px"><span class="wf-cbx on" style="width:9px;height:9px"></span>Properties</div>
+          <div class="wf-r" style="gap:6px"><span class="wf-cbx on" style="width:9px;height:9px"></span>Annotations</div>
+          <div class="wf-r" style="gap:6px"><span class="wf-cbx on" style="width:9px;height:9px"></span>Measurements</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="wf-h" style="color:rgba(0,0,0,.35)">Overlays</div>
+          <div class="wf-r" style="gap:6px"><span class="wf-cbx on" style="width:9px;height:9px"></span>1995 Survey Map</div>
+          <div class="wf-r" style="padding-left:15px;gap:5px"><div class="wf-sl" style="height:2px"><div class="wf-knob" style="left:42%;width:8px;height:8px;top:-3px"></div></div><span style="color:rgba(0,0,0,.4);font-size:9.5px">42%</span></div>
+        </div>
+        <div style="margin-top:auto;color:rgba(0,0,0,.38);font-size:10.5px">+ Add layer</div>
+      </div>
+    </div>
+
+    <div class="wf-map">
+      <div class="wf-road" style="left:-40px;top:200px;width:1000px;height:7px;transform:rotate(-6deg)"></div>
+      <div class="wf-road" style="left:260px;top:-60px;width:6px;height:760px;transform:rotate(9deg)"></div>
+      <div class="wf-road" style="left:560px;top:-40px;width:5px;height:740px;transform:rotate(-13deg)"></div>
+      <div class="wf-road" style="left:-20px;top:430px;width:1000px;height:5px;transform:rotate(3deg)"></div>
+      <div style="position:absolute;left:-30px;top:130px;width:900px;height:0;border-top:2.5px solid #c8a13a;transform:rotate(-9deg)"></div>
+      <div style="position:absolute;left:90px;top:260px;width:210px;height:150px;border:1.5px dashed #1a1a1a;background:rgba(200,240,107,.22);transform:rotate(-4deg)"></div>
+      <span class="wf-pin" style="left:180px;top:310px"></span>
+      <span class="wf-pin" style="left:430px;top:190px"></span>
+      <div style="position:absolute;left:108px;top:222px;background:#fff;border:1px solid rgba(0,0,0,.4);border-radius:3px;padding:3px 6px;font-size:10px">Parcel A · 12,345 m²</div>
+      <div style="position:absolute;right:10px;bottom:44px;display:flex;flex-direction:column;gap:4px">
+        <span class="wf-ico" style="width:24px;height:24px;border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)">+</span>
+        <span class="wf-ico" style="width:24px;height:24px;border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)">−</span>
+        <span class="wf-ico" style="width:24px;height:24px;margin-top:4px;border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)">N↑</span>
+      </div>
+      <div style="position:absolute;left:10px;bottom:10px;font-size:9.5px;color:rgba(0,0,0,.5)"><div style="width:70px;border-bottom:1.5px solid rgba(0,0,0,.5);border-left:1.5px solid rgba(0,0,0,.5);border-right:1.5px solid rgba(0,0,0,.5);height:4px"></div>500 m</div>
+      <div style="position:absolute;right:10px;bottom:10px;font-size:9.5px;color:rgba(0,0,0,.45)">27.1751, 78.0421 · z14</div>
+      <div class="wf-cal" style="left:360px;top:320px;width:210px">chrome is hairline + tinted white;<br>map reads as the surface, not a widget</div>
+    </div>
+
+    <div style="width:34px;border-left:1px solid rgba(0,0,0,.18);display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 0;flex:none;position:relative;background:#fdfdfc">
+      <span class="wf-ico on" style="width:24px;height:24px;font-size:11px">◉</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">╱</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">⬠</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">↔</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">▦</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">✎</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">🖼</span>
+      <div style="flex:1"></div>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">↶</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:transparent;font-size:11px">↷</span>
+      <span style="color:rgba(0,0,0,.3);font-size:10px">»</span>
+      <div class="wf-tt" style="right:30px;top:130px">Pin — P</div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="2b">
+<div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Both collapsed — map ≈97% of the viewport, chrome reduced to two edge stubs</div>
+<div class="dv-card">
+<div class="wf" style="width:1000px;height:620px">
+  <div class="wf-top" style="height:34px;border-bottom:1px solid rgba(0,0,0,.22);gap:9px;font-size:11px">
+    <span style="font-weight:700">PlotLens</span><span style="color:rgba(0,0,0,.3)">/</span>
+    <span style="color:rgba(0,0,0,.75)">Agra Ring Road Investigation ▾</span>
+    <div style="flex:1;max-width:260px;margin:0 auto;padding:3px 8px;border:1px solid rgba(0,0,0,.22);border-radius:3px;color:rgba(0,0,0,.4)">⌕  Search location</div>
+    <div class="wf-r" style="gap:10px;color:rgba(0,0,0,.55);font-size:10.5px"><span>✓ Saved</span><span>Share</span><span>Export</span><span>⋯</span></div>
+  </div>
+  <div class="wf-map">
+    <div class="wf-road" style="left:-40px;top:210px;width:1100px;height:8px;transform:rotate(-6deg)"></div>
+    <div class="wf-road" style="left:330px;top:-60px;width:6px;height:800px;transform:rotate(9deg)"></div>
+    <div class="wf-road" style="left:700px;top:-40px;width:5px;height:780px;transform:rotate(-13deg)"></div>
+    <div class="wf-road" style="left:-20px;top:460px;width:1100px;height:5px;transform:rotate(2deg)"></div>
+    <div style="position:absolute;left:-30px;top:140px;width:1100px;height:0;border-top:2.5px solid #c8a13a;transform:rotate(-8deg)"></div>
+    <div style="position:absolute;left:250px;top:300px;width:250px;height:170px;border:1.5px dashed #1a1a1a;background:rgba(200,240,107,.22);transform:rotate(-4deg)"></div>
+    <span class="wf-pin" style="left:350px;top:360px"></span>
+    <span class="wf-pin" style="left:640px;top:220px"></span>
+
+    <div style="position:absolute;left:0;top:14px;padding:6px 7px 6px 5px;border:1px solid rgba(0,0,0,.22);border-left:none;border-radius:0 4px 4px 0;background:rgba(255,255,255,.92);display:flex;align-items:center;gap:6px;font-size:10.5px">
+      <span style="color:rgba(0,0,0,.45)">»</span><span class="wf-h" style="writing-mode:vertical-rl;letter-spacing:.14em">Layers 6</span>
+    </div>
+    <div style="position:absolute;right:0;top:14px;padding:6px 5px 6px 7px;border:1px solid rgba(0,0,0,.22);border-right:none;border-radius:4px 0 0 4px;background:rgba(255,255,255,.92);display:flex;flex-direction:column;align-items:center;gap:4px">
+      <span style="color:rgba(0,0,0,.45);font-size:10.5px">«</span>
+      <span class="wf-ico on" style="width:22px;height:22px;font-size:11px">◉</span>
+    </div>
+
+    <div style="position:absolute;right:10px;bottom:44px;display:flex;flex-direction:column;gap:4px">
+      <span class="wf-ico" style="width:24px;height:24px;border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)">+</span>
+      <span class="wf-ico" style="width:24px;height:24px;border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)">−</span>
+      <span class="wf-ico" style="width:24px;height:24px;margin-top:4px;border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)">N↑</span>
+    </div>
+    <div style="position:absolute;left:10px;bottom:10px;font-size:9.5px;color:rgba(0,0,0,.5)"><div style="width:70px;border-bottom:1.5px solid rgba(0,0,0,.5);border-left:1.5px solid rgba(0,0,0,.5);border-right:1.5px solid rgba(0,0,0,.5);height:4px"></div>500 m</div>
+    <div style="position:absolute;right:10px;bottom:10px;font-size:9.5px;color:rgba(0,0,0,.45)">27.1751, 78.0421 · z14</div>
+    <div class="wf-cal" style="left:430px;top:120px;width:250px">both stubs are click-to-restore;<br>keyboard tools still work while collapsed<br>(P / L / G / M / N / O)</div>
+  </div>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "build <a class="dv-oid" href="#2a">2a</a> as the hi-fi dark prototype" · "show the layers panel as an overlay instead of a column" · "auto-collapse the rail while drawing"</p>
+</section>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">PlotLens — first wireframe pass: three workspace structures + the supporting screens &amp; states</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Workspace A — panels flank the map (layers left, tool rail right)</div>
+<div class="dv-card">
+<div class="wf" style="width:1000px;height:620px">
+  <div class="wf-top">
+    <span style="font-weight:700">PlotLens</span>
+    <span style="color:rgba(0,0,0,.35)">/</span>
+    <span>Agra Ring Road Investigation ▾</span>
+    <div class="wf-in" style="flex:1;max-width:320px;margin:0 auto">⌕  Search location, coordinates, plot no.</div>
+    <div class="wf-r"><span style="color:rgba(0,0,0,.45)">✓ Saved 12:04</span><span class="wf-btn">Share</span><span class="wf-btn">Export</span><span class="wf-ico">⋯</span></div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:236px;border-right:1.5px solid #1a1a1a;display:flex;flex-direction:column;flex:none">
+      <div class="wf-r" style="padding:10px 12px;border-bottom:1px solid rgba(0,0,0,.18);justify-content:space-between"><span class="wf-h">Layers</span><span style="color:rgba(0,0,0,.45)">«</span></div>
+      <div style="padding:10px 12px;display:flex;flex-direction:column;gap:14px;flex:1">
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div class="wf-h">Base map</div>
+          <div class="wf-r"><span class="wf-rad"></span>Streets</div>
+          <div class="wf-r"><span class="wf-rad on"></span>Satellite</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div class="wf-h">Government</div>
+          <div class="wf-r"><span class="wf-cbx on"></span>Proposed Roads<span style="margin-left:auto;color:rgba(0,0,0,.4)">ⓘ ⋮⋮</span></div>
+          <div class="wf-r" style="padding-left:19px"><div class="wf-sl"><div class="wf-knob" style="left:70%"></div></div><span style="color:rgba(0,0,0,.45);font-size:10px">70%</span></div>
+          <div class="wf-r"><span class="wf-cbx on"></span>Master Plan<span style="margin-left:auto;color:rgba(0,0,0,.4)">ⓘ ⋮⋮</span></div>
+          <div class="wf-r"><span class="wf-cbx"></span>Zoning<span style="margin-left:auto;color:rgba(0,0,0,.4)">ⓘ ⋮⋮</span></div>
+          <div class="wf-r" style="color:rgba(0,0,0,.5)"><span class="wf-cbx"></span>Parcels <span style="font-size:10px">— unavailable</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div class="wf-h">My data</div>
+          <div class="wf-r"><span class="wf-cbx on"></span>Properties</div>
+          <div class="wf-r"><span class="wf-cbx on"></span>Annotations</div>
+          <div class="wf-r"><span class="wf-cbx on"></span>Measurements</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div class="wf-h">Overlays</div>
+          <div class="wf-r"><span class="wf-cbx on"></span>1995 Survey Map<span style="margin-left:auto;color:rgba(0,0,0,.4)">⋮⋮</span></div>
+          <div class="wf-r" style="padding-left:19px"><div class="wf-sl"><div class="wf-knob" style="left:42%"></div></div><span style="color:rgba(0,0,0,.45);font-size:10px">42%</span></div>
+        </div>
+      </div>
+      <div style="padding:9px 12px;border-top:1px solid rgba(0,0,0,.18);color:rgba(0,0,0,.5)">+ Add layer / import</div>
+    </div>
+
+    <div class="wf-map">
+      <div class="wf-road" style="left:-40px;top:200px;width:1000px;height:7px;transform:rotate(-6deg)"></div>
+      <div class="wf-road" style="left:260px;top:-60px;width:6px;height:760px;transform:rotate(9deg)"></div>
+      <div class="wf-road" style="left:520px;top:-40px;width:5px;height:740px;transform:rotate(-13deg)"></div>
+      <div class="wf-road" style="left:-20px;top:420px;width:1000px;height:5px;transform:rotate(3deg)"></div>
+      <div style="position:absolute;left:-30px;top:120px;width:900px;height:0;border-top:2.5px solid #c8a13a;transform:rotate(-9deg)"></div>
+      <div style="position:absolute;left:60px;top:250px;width:210px;height:150px;border:1.5px dashed #1a1a1a;background:rgba(200,240,107,.22);transform:rotate(-4deg)"></div>
+      <span class="wf-pin" style="left:150px;top:300px"></span>
+      <span class="wf-pin" style="left:400px;top:180px"></span>
+      <div style="position:absolute;left:78px;top:212px;background:#fff;border:1.2px solid #1a1a1a;border-radius:4px;padding:4px 7px;font-size:10px">Parcel A · 12,345 m²</div>
+      <div class="wf-cal" style="left:340px;top:300px;width:180px">map = ~78% of viewport;<br>both panels collapse to icons</div>
+      <div style="position:absolute;right:12px;bottom:52px;display:flex;flex-direction:column;gap:6px"><span class="wf-ico">+</span><span class="wf-ico">−</span><span class="wf-ico" style="margin-top:6px">N↑</span></div>
+      <div style="position:absolute;left:12px;bottom:12px;font-size:10px;color:rgba(0,0,0,.6)"><div style="width:80px;border-bottom:2px solid #1a1a1a;border-left:2px solid #1a1a1a;border-right:2px solid #1a1a1a;height:5px"></div>500 m</div>
+      <div style="position:absolute;right:12px;bottom:12px;font-size:10px;color:rgba(0,0,0,.6)">27.1751, 78.0421 · z14</div>
+    </div>
+
+    <div style="width:46px;border-left:1.5px solid #1a1a1a;display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 0;flex:none;position:relative">
+      <span class="wf-ico on">◉</span><span class="wf-ico">╱</span><span class="wf-ico">⬠</span><span class="wf-ico">↔</span><span class="wf-ico">▦</span><span class="wf-ico">✎</span><span class="wf-ico">🖼</span>
+      <div style="flex:1"></div><span class="wf-ico">↶</span><span class="wf-ico">↷</span>
+      <div class="wf-tt" style="right:52px;top:12px">Pin — P</div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Workspace B — thin left tool rail + one contextual dock (Layers / Details / Overlay tabs)</div>
+<div class="dv-card">
+<div class="wf" style="width:1000px;height:620px">
+  <div class="wf-top">
+    <span style="font-weight:700">PlotLens</span><span style="color:rgba(0,0,0,.35)">/</span><span>Agra Ring Road Investigation ▾</span>
+    <div class="wf-in" style="flex:1;max-width:320px;margin:0 auto">⌕  Search location</div>
+    <div class="wf-r"><span style="color:rgba(0,0,0,.45)">✓ Saved</span><span class="wf-btn">Export</span><span class="wf-ico">⋯</span></div>
+  </div>
+  <div style="flex:1;display:flex;min-height:0">
+    <div style="width:48px;border-right:1.5px solid #1a1a1a;display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 0;flex:none">
+      <span class="wf-ico">◉</span><span class="wf-ico">╱</span><span class="wf-ico on">⬠</span><span class="wf-ico">↔</span><span class="wf-ico">▦</span><span class="wf-ico">✎</span><span class="wf-ico">🖼</span>
+    </div>
+    <div class="wf-map">
+      <div class="wf-road" style="left:-40px;top:230px;width:1000px;height:7px;transform:rotate(-5deg)"></div>
+      <div class="wf-road" style="left:300px;top:-60px;width:6px;height:760px;transform:rotate(8deg)"></div>
+      <div class="wf-road" style="left:560px;top:-40px;width:5px;height:740px;transform:rotate(-12deg)"></div>
+      <div style="position:absolute;left:120px;top:260px;width:230px;height:160px;border:1.5px dashed #1a1a1a;background:rgba(200,240,107,.25)"></div>
+      <span class="wf-pin" style="left:230px;top:330px"></span>
+      <div class="wf-cal" style="left:120px;top:150px;width:220px">selection drives the dock —<br>no separate inspector windows</div>
+      <div style="position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:6px"><span class="wf-ico">+</span><span class="wf-ico">−</span><span class="wf-ico" style="margin-top:6px">N↑</span></div>
+      <div style="position:absolute;left:12px;bottom:12px;font-size:10px;color:rgba(0,0,0,.6)"><div style="width:80px;border-bottom:2px solid #1a1a1a;border-left:2px solid #1a1a1a;border-right:2px solid #1a1a1a;height:5px"></div>500 m</div>
+    </div>
+    <div style="width:300px;border-left:1.5px solid #1a1a1a;display:flex;flex-direction:column;flex:none">
+      <div style="display:flex;border-bottom:1.5px solid #1a1a1a">
+        <div style="flex:1;padding:9px 0;text-align:center;color:rgba(0,0,0,.5)">Layers</div>
+        <div style="flex:1;padding:9px 0;text-align:center;font-weight:600;border-bottom:2.5px solid #1a1a1a;background:#f6f6f3">Details</div>
+        <div style="flex:1;padding:9px 0;text-align:center;color:rgba(0,0,0,.5)">Overlay</div>
+      </div>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:13px">
+        <div><div style="font-weight:600;font-size:13px">Land Parcel A</div><div style="color:rgba(0,0,0,.5);font-size:10.5px">User-drawn polygon · dashed</div></div>
+        <div><div class="wf-h">Location</div><div>27.1751, 78.0421</div></div>
+        <div><div class="wf-h">Area</div><div>12,345 m² · 1.23 ha</div></div>
+        <div><div class="wf-h">Notes</div><div class="wf-in" style="height:44px">Potential acquisition — check road alignment</div></div>
+        <div><div class="wf-h">Photos</div><div style="display:flex;gap:6px;margin-top:5px"><div class="wf-thumb" style="width:52px;height:40px;border:1.2px solid rgba(0,0,0,.5)"></div><div class="wf-thumb" style="width:52px;height:40px;border:1.2px solid rgba(0,0,0,.5)"></div><div class="wf-ico" style="width:52px;height:40px">+</div></div></div>
+        <div><div class="wf-h">Sources</div>
+          <div class="wf-r" style="margin-top:5px"><span style="width:14px;border-top:2px solid #1a1a1a"></span>Government Road Plan (2025)</div>
+          <div class="wf-r" style="margin-top:4px"><span style="width:14px;border-top:2px dotted #1a1a1a"></span>1995 Survey Map — approximate</div>
+        </div>
+        <div class="wf-r" style="gap:8px"><span class="wf-btn">Edit</span><span class="wf-btn">Delete</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Workspace C — full-bleed map, floating panels (map is the page)</div>
+<div class="dv-card">
+<div class="wf" style="width:1000px;height:620px">
+  <div class="wf-map" style="flex:1">
+    <div class="wf-road" style="left:-40px;top:250px;width:1100px;height:8px;transform:rotate(-5deg)"></div>
+    <div class="wf-road" style="left:330px;top:-60px;width:6px;height:800px;transform:rotate(8deg)"></div>
+    <div class="wf-road" style="left:700px;top:-40px;width:5px;height:780px;transform:rotate(-12deg)"></div>
+    <div class="wf-road" style="left:-20px;top:470px;width:1100px;height:5px;transform:rotate(2deg)"></div>
+    <div style="position:absolute;left:400px;top:300px;width:230px;height:150px;border:1.5px dashed #1a1a1a;background:rgba(200,240,107,.22)"></div>
+    <span class="wf-pin" style="left:500px;top:360px"></span>
+
+    <div class="wf-card" style="position:absolute;left:16px;top:16px;width:230px;padding:10px 12px;display:flex;flex-direction:column;gap:9px">
+      <div class="wf-r" style="justify-content:space-between"><span style="font-weight:700">PlotLens</span><span style="color:rgba(0,0,0,.45)">⌄</span></div>
+      <div style="font-size:10.5px;color:rgba(0,0,0,.55)">Agra Ring Road Investigation</div>
+      <div class="wf-in">⌕ Search location</div>
+      <div class="wf-h">Layers</div>
+      <div class="wf-r"><span class="wf-cbx on"></span>Satellite</div>
+      <div class="wf-r"><span class="wf-cbx on"></span>Proposed Roads</div>
+      <div class="wf-r"><span class="wf-cbx"></span>Zoning</div>
+      <div class="wf-r"><span class="wf-cbx on"></span>1995 Survey Map</div>
+      <div style="color:rgba(0,0,0,.5)">Show all (8) ▾</div>
+    </div>
+
+    <div class="wf-card" style="position:absolute;right:16px;top:16px;width:200px;padding:9px 11px;display:flex;flex-direction:column;gap:7px">
+      <div class="wf-r" style="justify-content:space-between"><span class="wf-h">Overlay · 1995 Survey</span><span style="color:rgba(0,0,0,.45)">✕</span></div>
+      <div class="wf-r"><span style="font-size:10px;width:44px">Opacity</span><div class="wf-sl"><div class="wf-knob" style="left:42%"></div></div><span style="font-size:10px">42%</span></div>
+      <div class="wf-r"><span style="font-size:10px;width:44px">Rotate</span><div class="wf-sl"><div class="wf-knob" style="left:30%"></div></div><span style="font-size:10px">−7°</span></div>
+      <div class="wf-r" style="gap:6px"><span class="wf-btn" style="flex:1;justify-content:center">🔒 Lock</span><span class="wf-btn" style="flex:1;justify-content:center">Blend ▾</span></div>
+    </div>
+
+    <div class="wf-card" style="position:absolute;left:50%;transform:translateX(-50%);bottom:18px;padding:7px 9px;display:flex;gap:7px;align-items:center">
+      <span class="wf-ico on">◉</span><span class="wf-ico">╱</span><span class="wf-ico">⬠</span><span class="wf-ico">↔</span><span class="wf-ico">▦</span><span class="wf-ico">✎</span><span class="wf-ico">🖼</span>
+      <span style="width:1px;height:22px;background:rgba(0,0,0,.25)"></span>
+      <span class="wf-ico">↶</span><span class="wf-ico">↷</span>
+      <span style="width:1px;height:22px;background:rgba(0,0,0,.25)"></span>
+      <span class="wf-btn">Export</span><span style="font-size:10px;color:rgba(0,0,0,.5)">✓ Saved</span>
+    </div>
+
+    <div style="position:absolute;right:16px;bottom:90px;display:flex;flex-direction:column;gap:6px"><span class="wf-ico">+</span><span class="wf-ico">−</span><span class="wf-ico" style="margin-top:6px">N↑</span></div>
+    <div style="position:absolute;left:16px;bottom:18px;font-size:10px;color:rgba(0,0,0,.6)"><div style="width:80px;border-bottom:2px solid #1a1a1a;border-left:2px solid #1a1a1a;border-right:2px solid #1a1a1a;height:5px"></div>500 m · 27.1751, 78.0421</div>
+    <div class="wf-cal" style="left:300px;top:200px;width:190px">nothing docked — panels<br>can be dismissed entirely</div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1d">
+<div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Projects browser</div>
+<div class="dv-card">
+<div class="wf" style="width:780px;height:520px">
+  <div class="wf-top"><span style="font-weight:700">PlotLens</span><div style="flex:1"></div><div class="wf-in" style="width:180px">⌕ Search projects</div><span class="wf-btn" style="background:#c8f06b;border-color:#1a1a1a;font-weight:600">+ New Map</span></div>
+  <div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+    <div class="wf-r" style="justify-content:space-between"><span class="wf-h">4 investigations</span><span style="color:rgba(0,0,0,.5);font-size:10.5px">Sort: Last modified ▾   ▦ ☰</span></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+      <div class="wf-card" style="overflow:hidden">
+        <div class="wf-thumb" style="height:92px"><div class="wf-road" style="left:-10px;top:40px;width:300px;height:4px;transform:rotate(-8deg)"></div><span class="wf-pin" style="left:60px;top:45px"></span></div>
+        <div style="padding:9px 10px;display:flex;flex-direction:column;gap:3px;border-top:1.2px solid #1a1a1a">
+          <div style="font-weight:600">Agra Ring Road Investigation</div>
+          <div style="color:rgba(0,0,0,.5);font-size:10.5px">Agra, Uttar Pradesh</div>
+          <div style="color:rgba(0,0,0,.5);font-size:10.5px">6 layers · 12 annotations</div>
+          <div style="color:rgba(0,0,0,.4);font-size:10px">Edited 2 hours ago</div>
+        </div>
+      </div>
+      <div class="wf-card" style="overflow:hidden">
+        <div class="wf-thumb" style="height:92px"><div class="wf-road" style="left:40px;top:-10px;width:4px;height:150px;transform:rotate(10deg)"></div></div>
+        <div style="padding:9px 10px;display:flex;flex-direction:column;gap:3px;border-top:1.2px solid #1a1a1a">
+          <div style="font-weight:600">Yamuna Expressway Plots</div>
+          <div style="color:rgba(0,0,0,.5);font-size:10.5px">Mathura</div>
+          <div style="color:rgba(0,0,0,.5);font-size:10.5px">3 layers · 5 annotations</div>
+          <div style="color:rgba(0,0,0,.4);font-size:10px">Edited Aug 3</div>
+        </div>
+      </div>
+      <div class="wf-card" style="overflow:hidden">
+        <div class="wf-thumb" style="height:92px"><div style="position:absolute;left:30px;top:30px;width:70px;height:44px;border:1.4px dashed #1a1a1a"></div></div>
+        <div style="padding:9px 10px;display:flex;flex-direction:column;gap:3px;border-top:1.2px solid #1a1a1a">
+          <div style="font-weight:600">Village Survey 1995 Compare</div>
+          <div style="color:rgba(0,0,0,.5);font-size:10.5px">Firozabad</div>
+          <div style="color:rgba(0,0,0,.5);font-size:10.5px">4 layers · 21 annotations</div>
+          <div style="color:rgba(0,0,0,.4);font-size:10px">Edited Jul 28</div>
+        </div>
+      </div>
+    </div>
+    <div class="wf-cal" style="position:static;margin-top:4px">card preview = last saved map view, so projects are recognised spatially, not by name</div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1e">
+<div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Empty state + New Project</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<div class="dv-card">
+<div class="wf" style="width:400px;height:250px">
+  <div class="wf-top"><span style="font-weight:700">PlotLens</span><div style="flex:1"></div><span class="wf-btn" style="background:#c8f06b;font-weight:600">+ New Map</span></div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px">
+    <div style="width:60px;height:44px;border:1.4px dashed rgba(0,0,0,.5);border-radius:4px"></div>
+    <div style="font-weight:600">No projects yet</div>
+    <div style="color:rgba(0,0,0,.5)">Create your first investigation.</div>
+    <span class="wf-btn" style="background:#c8f06b;font-weight:600">+ New Map</span>
+  </div>
+</div>
+</div>
+<div class="dv-card">
+<div class="wf" style="width:400px;height:300px;padding:16px;gap:12px">
+  <div style="font-weight:700;font-size:14px">New map project</div>
+  <div style="display:flex;flex-direction:column;gap:4px"><span class="wf-h">Project name</span><div class="wf-in">Agra Ring Road Investigation</div></div>
+  <div style="display:flex;flex-direction:column;gap:4px"><span class="wf-h">Location</span><div class="wf-in">⌕ Agra, Uttar Pradesh</div><div style="font-size:10px;color:rgba(0,0,0,.45)">Sets the opening map view</div></div>
+  <div style="display:flex;flex-direction:column;gap:4px"><span class="wf-h">Description (optional)</span><div class="wf-in" style="height:38px"></div></div>
+  <div class="wf-r" style="justify-content:flex-end;gap:8px;margin-top:auto"><span class="wf-btn">Cancel</span><span class="wf-btn" style="background:#c8f06b;font-weight:600">Create Project →</span></div>
+  <div class="wf-cal" style="position:static;font-size:14px">3 fields → straight into the map. No setup wizard.</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1f">
+<div class="dv-olabel"><a class="dv-oid" href="#1f">1f</a>Image overlay — placement &amp; alignment on the map</div>
+<div class="dv-card">
+<div class="wf" style="width:820px;height:520px">
+  <div class="wf-map">
+    <div class="wf-road" style="left:-40px;top:230px;width:900px;height:7px;transform:rotate(-5deg)"></div>
+    <div class="wf-road" style="left:280px;top:-60px;width:6px;height:700px;transform:rotate(8deg)"></div>
+    <div style="position:absolute;left:150px;top:110px;width:330px;height:250px;transform:rotate(-7deg);border:1.5px solid #2a6bd6;background:repeating-linear-gradient(135deg,rgba(0,0,0,.12) 0 3px,transparent 3px 8px),rgba(255,255,255,.55)">
+      <div style="position:absolute;left:-5px;top:-5px;width:9px;height:9px;background:#fff;border:1.5px solid #2a6bd6"></div>
+      <div style="position:absolute;right:-5px;top:-5px;width:9px;height:9px;background:#fff;border:1.5px solid #2a6bd6"></div>
+      <div style="position:absolute;left:-5px;bottom:-5px;width:9px;height:9px;background:#fff;border:1.5px solid #2a6bd6"></div>
+      <div style="position:absolute;right:-5px;bottom:-5px;width:9px;height:9px;background:#fff;border:1.5px solid #2a6bd6"></div>
+      <div style="position:absolute;left:50%;top:-26px;width:1px;height:20px;background:#2a6bd6"></div>
+      <div style="position:absolute;left:calc(50% - 6px);top:-38px;width:12px;height:12px;border-radius:50%;border:1.5px solid #2a6bd6;background:#fff;font-size:9px;text-align:center;line-height:11px;color:#2a6bd6">↺</div>
+      <div style="position:absolute;left:8px;bottom:6px;font-size:10px;color:rgba(0,0,0,.6)">1995_survey_sheet_4.jpg</div>
+    </div>
+    <div class="wf-card" style="position:absolute;right:14px;top:14px;width:210px;padding:11px;display:flex;flex-direction:column;gap:9px">
+      <div class="wf-r" style="justify-content:space-between"><span class="wf-h">Image overlay</span><span style="color:rgba(0,0,0,.45)">✕</span></div>
+      <div style="font-size:10.5px;color:rgba(0,0,0,.55)">1995_survey_sheet_4.jpg</div>
+      <div><div class="wf-r" style="justify-content:space-between"><span style="font-size:10px">Opacity</span><span style="font-size:10px">42%</span></div><div class="wf-sl" style="margin-top:5px"><div class="wf-knob" style="left:42%"></div></div></div>
+      <div><div class="wf-r" style="justify-content:space-between"><span style="font-size:10px">Rotation</span><span style="font-size:10px">−7.0°</span></div><div class="wf-r" style="margin-top:5px;gap:6px"><span class="wf-ico" style="width:26px;height:24px">↺</span><div class="wf-sl"><div class="wf-knob" style="left:35%"></div></div><span class="wf-ico" style="width:26px;height:24px">↻</span></div></div>
+      <div><div class="wf-r" style="justify-content:space-between"><span style="font-size:10px">Scale</span><span style="font-size:10px">118%</span></div><div class="wf-r" style="margin-top:5px;gap:6px"><span class="wf-ico" style="width:26px;height:24px">−</span><div class="wf-sl"><div class="wf-knob" style="left:55%"></div></div><span class="wf-ico" style="width:26px;height:24px">+</span></div></div>
+      <div><div class="wf-h">Blend</div><div class="wf-r" style="gap:5px;margin-top:5px"><span class="wf-btn" style="background:#c8f06b">Normal</span><span class="wf-btn">Multiply</span><span class="wf-btn">Screen</span></div></div>
+      <div class="wf-r" style="gap:6px;margin-top:2px"><span class="wf-btn" style="flex:1;justify-content:center">🔒 Lock</span><span class="wf-btn" style="flex:1;justify-content:center">👁 Hide</span></div>
+      <div style="border-top:1px solid rgba(0,0,0,.2);padding-top:7px;font-size:10px;color:rgba(0,0,0,.5)">Historical · not to scale — treat boundaries as approximate</div>
+    </div>
+    <div class="wf-cal" style="left:120px;bottom:60px;width:250px">drag corners to scale, handle above to rotate,<br>drag body to move — same as a canvas</div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1g">
+<div class="dv-olabel"><a class="dv-oid" href="#1g">1g</a>Upload, loading &amp; error states</div>
+<div style="display:flex;flex-direction:column;gap:14px">
+<div class="dv-card"><div class="wf" style="width:340px;height:200px;padding:14px;gap:10px">
+  <div class="wf-h">Add image overlay</div>
+  <div style="flex:1;border:1.5px dashed rgba(0,0,0,.5);border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:rgba(0,0,0,.55)">
+    <div style="font-weight:600;color:#1a1a1a">Drop a map or survey image</div>
+    <div>JPG, PNG, PDF page · stays on your device</div>
+    <span class="wf-btn">Browse files</span>
+  </div>
+</div></div>
+<div class="dv-card"><div class="wf" style="width:340px;height:120px;padding:14px;gap:10px;justify-content:center">
+  <div style="font-weight:600">Preparing image…</div>
+  <div style="height:4px;background:rgba(0,0,0,.15);border-radius:2px"><div style="width:62%;height:100%;background:#1a1a1a;border-radius:2px"></div></div>
+  <div style="color:rgba(0,0,0,.5)">Loading Proposed Roads… · Processing 1,248 features…</div>
+</div></div>
+<div class="dv-card"><div class="wf" style="width:340px;height:150px;padding:14px;gap:8px;justify-content:center">
+  <div class="wf-r"><span style="width:14px;height:14px;border:1.4px solid #1a1a1a;border-radius:50%;text-align:center;font-size:10px;line-height:12px">!</span><span style="font-weight:600">Proposed Roads is unavailable</span></div>
+  <div style="color:rgba(0,0,0,.6)">This government layer is temporarily unavailable. Your project is safe — nothing was lost.</div>
+  <div class="wf-r" style="gap:8px;margin-top:4px"><span class="wf-btn">Try again</span><span class="wf-btn">Hide layer</span></div>
+</div></div>
+</div>
+</div>
+
+<div class="dv-opt" id="1h">
+<div class="dv-olabel"><a class="dv-oid" href="#1h">1h</a>Drawing, live measurement &amp; provenance legend</div>
+<div class="dv-card">
+<div class="wf" style="width:820px;height:470px">
+  <div class="wf-map">
+    <div class="wf-road" style="left:-40px;top:260px;width:900px;height:7px;transform:rotate(-4deg)"></div>
+    <div class="wf-road" style="left:520px;top:-60px;width:5px;height:700px;transform:rotate(9deg)"></div>
+    <div style="position:absolute;left:140px;top:120px;width:250px;height:180px;border:1.6px dashed #1a1a1a;background:rgba(200,240,107,.25)"></div>
+    <div style="position:absolute;left:134px;top:114px;width:9px;height:9px;background:#c8f06b;border:1.5px solid #1a1a1a"></div>
+    <div style="position:absolute;left:384px;top:114px;width:9px;height:9px;background:#c8f06b;border:1.5px solid #1a1a1a"></div>
+    <div style="position:absolute;left:134px;top:294px;width:9px;height:9px;background:#c8f06b;border:1.5px solid #1a1a1a"></div>
+    <div style="position:absolute;left:384px;top:294px;width:9px;height:9px;background:#fff;border:1.5px solid #1a1a1a"></div>
+    <div class="wf-card" style="position:absolute;left:250px;top:190px;padding:6px 9px;text-align:center"><div style="font-weight:700">12,345 m²</div><div style="font-size:10px;color:rgba(0,0,0,.55)">1.23 hectares</div></div>
+    <div style="position:absolute;left:392px;top:300px;font-size:10px;color:rgba(0,0,0,.6)">click to close · Esc cancels</div>
+    <div style="position:absolute;left:470px;top:340px;width:180px;border-top:1.6px dotted #1a1a1a;transform:rotate(18deg)"></div>
+    <div class="wf-card" style="position:absolute;left:520px;top:390px;padding:5px 8px;font-size:10.5px">248 m</div>
+
+    <div class="wf-card" style="position:absolute;left:50%;transform:translateX(-50%);top:14px;padding:6px 8px;display:flex;align-items:center;gap:8px">
+      <span style="font-size:10.5px;font-weight:600">Polygon · 3 points</span><span style="width:1px;height:18px;background:rgba(0,0,0,.2)"></span>
+      <span class="wf-btn">↶ Undo</span><span class="wf-btn">Finish</span><span class="wf-btn">Cancel</span>
+    </div>
+
+    <div class="wf-card" style="position:absolute;right:14px;bottom:14px;padding:10px 12px;display:flex;flex-direction:column;gap:7px;width:200px">
+      <div class="wf-h">How to read lines</div>
+      <div class="wf-r"><span style="width:26px;border-top:2px solid #1a1a1a"></span>Official source</div>
+      <div class="wf-r"><span style="width:26px;border-top:2px dashed #1a1a1a"></span>User drawn</div>
+      <div class="wf-r"><span style="width:26px;border-top:2px dotted #1a1a1a"></span>Approximate</div>
+      <div class="wf-r"><span style="width:26px;border-top:2px solid rgba(0,0,0,.35)"></span>Historical (1995)</div>
+      <div style="font-size:10px;color:rgba(0,0,0,.5)">Style + label, never colour alone.</div>
+    </div>
+    <div class="wf-card" style="position:absolute;left:14px;bottom:14px;padding:9px 11px;width:210px;display:flex;flex-direction:column;gap:5px">
+      <div class="wf-h">Source · Proposed Roads</div>
+      <div style="font-size:10.5px">Government Dataset · Proposed Road Network</div>
+      <div style="font-size:10.5px;color:rgba(0,0,0,.55)">Published 2025 · Checked Aug 10, 2026</div>
+      <div style="font-size:10.5px;color:rgba(0,0,0,.55)">Govt Open Data License — India</div>
+    </div>
+    <div class="wf-cal" style="left:150px;top:60px;width:230px">live figure follows the cursor —<br>no modal to read a measurement</div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1i">
+<div class="dv-olabel"><a class="dv-oid" href="#1i">1i</a>Mobile — full-screen map + bottom sheets</div>
+<div style="display:flex;gap:14px">
+  <div class="dv-card"><div class="wf" style="width:280px;height:560px">
+    <div class="wf-map">
+      <div class="wf-road" style="left:-40px;top:220px;width:400px;height:6px;transform:rotate(-6deg)"></div>
+      <div class="wf-road" style="left:150px;top:-40px;width:5px;height:600px;transform:rotate(8deg)"></div>
+      <span class="wf-pin" style="left:120px;top:250px"></span>
+      <div class="wf-card" style="position:absolute;left:12px;right:12px;top:12px;padding:7px 10px;display:flex;align-items:center;gap:8px"><span style="color:rgba(0,0,0,.5)">⌕</span><span style="color:rgba(0,0,0,.45)">Search location</span><span style="margin-left:auto">⋯</span></div>
+      <div style="position:absolute;right:12px;bottom:96px;display:flex;flex-direction:column;gap:6px"><span class="wf-ico">+</span><span class="wf-ico">−</span><span class="wf-ico">N↑</span></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;border-top:1.5px solid #1a1a1a;background:#fff;display:flex;justify-content:space-around;padding:9px 6px 14px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px"><span class="wf-ico on">◉</span>Pin</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px"><span class="wf-ico">⬠</span>Draw</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px"><span class="wf-ico">↔</span>Measure</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px"><span class="wf-ico">▦</span>Layers</div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px"><span class="wf-ico">⋯</span>More</div>
+      </div>
+    </div>
+  </div></div>
+  <div class="dv-card"><div class="wf" style="width:280px;height:560px">
+    <div class="wf-map">
+      <div class="wf-road" style="left:-40px;top:150px;width:400px;height:6px;transform:rotate(-6deg)"></div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:330px;border-top:1.5px solid #1a1a1a;background:#fff;border-radius:12px 12px 0 0;padding:10px 14px;display:flex;flex-direction:column;gap:10px">
+        <div style="width:36px;height:4px;background:rgba(0,0,0,.25);border-radius:2px;align-self:center"></div>
+        <div style="font-weight:700">Layers</div>
+        <div class="wf-h">Base map</div>
+        <div class="wf-r"><span class="wf-rad"></span>Streets</div>
+        <div class="wf-r"><span class="wf-rad on"></span>Satellite</div>
+        <div class="wf-h">Government</div>
+        <div class="wf-r"><span class="wf-cbx on"></span>Proposed Roads<span style="margin-left:auto;color:rgba(0,0,0,.4)">ⓘ</span></div>
+        <div class="wf-r" style="padding-left:19px"><div class="wf-sl"><div class="wf-knob" style="left:70%"></div></div></div>
+        <div class="wf-r"><span class="wf-cbx"></span>Zoning</div>
+        <div class="wf-h">Overlays</div>
+        <div class="wf-r"><span class="wf-cbx on"></span>1995 Survey Map</div>
+        <div class="wf-r" style="padding-left:19px"><div class="wf-sl"><div class="wf-knob" style="left:42%"></div></div><span style="font-size:10px">42%</span></div>
+      </div>
+    </div>
+  </div></div>
+  <div class="dv-card"><div class="wf" style="width:280px;height:560px">
+    <div class="wf-map">
+      <div class="wf-road" style="left:-40px;top:120px;width:400px;height:6px;transform:rotate(-6deg)"></div>
+      <span class="wf-pin" style="left:130px;top:150px"></span>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:300px;border-top:1.5px solid #1a1a1a;background:#fff;border-radius:12px 12px 0 0;padding:10px 14px;display:flex;flex-direction:column;gap:9px">
+        <div style="width:36px;height:4px;background:rgba(0,0,0,.25);border-radius:2px;align-self:center"></div>
+        <div style="font-weight:700;font-size:13px">Land Parcel A</div>
+        <div style="font-size:10.5px;color:rgba(0,0,0,.5)">User-drawn · 27.1751, 78.0421</div>
+        <div><div class="wf-h">Area</div><div>12,345 m² · 1.23 ha</div></div>
+        <div><div class="wf-h">Note</div><div class="wf-in" style="height:36px">Potential acquisition</div></div>
+        <div class="wf-r" style="gap:6px"><div class="wf-thumb" style="width:48px;height:38px;border:1.2px solid rgba(0,0,0,.5)"></div><div class="wf-thumb" style="width:48px;height:38px;border:1.2px solid rgba(0,0,0,.5)"></div><span class="wf-ico" style="width:48px;height:38px">+</span></div>
+        <div class="wf-r" style="gap:8px;margin-top:auto"><span class="wf-btn" style="flex:1;justify-content:center">Edit</span><span class="wf-btn" style="flex:1;justify-content:center">Sources</span><span class="wf-btn" style="flex:1;justify-content:center">Delete</span></div>
+      </div>
+    </div>
+  </div></div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Try next: "take <a class="dv-oid" href="#1a">1a</a> forward as the real prototype" · "merge the floating panels from <a class="dv-oid" href="#1c">1c</a> into <a class="dv-oid" href="#1b">1b</a>" · "more options for the layers panel"</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;overlayOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:42,&quot;min&quot;:0,&quot;max&quot;:100,&quot;step&quot;:1,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Image overlay&quot;},&quot;overlayBlend&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Normal&quot;,&quot;options&quot;:[&quot;Normal&quot;,&quot;Multiply&quot;,&quot;Screen&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Image overlay&quot;},&quot;showHandles&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Image overlay&quot;},&quot;showCallouts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Wireframe&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const o = this.props.overlayOpacity ?? 42;
+    const b = this.props.overlayBlend ?? "Normal";
+    const on = "#c8f06b", off = "transparent";
+    return {
+      opacityPct: o + "%",
+      opacityAlpha: String(o / 100),
+      knobLeft: "calc(" + o + "% - 4px)",
+      blendCss: b.toLowerCase(),
+      blendNormalBg: b === "Normal" ? on : off,
+      blendMultiplyBg: b === "Multiply" ? on : off,
+      blendScreenBg: b === "Screen" ? on : off,
+      showHandles: this.props.showHandles ?? true,
+      showCallouts: this.props.showCallouts ?? true
+    };
+  }
+}
+</script>
+</body>
+</html>

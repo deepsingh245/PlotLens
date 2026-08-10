@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Environment / secrets — never commit real env files
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Firebase
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.firebase/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Large/raw GIS data — do not commit satellite files, GeoTIFFs, shapefiles, government downloads.
+# See docs/research/predevelopment-readiness-checklist-raw.md §52.
+*.tif
+*.tiff
+*.shp
+*.shx
+*.dbf
+/data/raw/
