@@ -8,7 +8,7 @@ This folder holds one detailed, execution-ready plan per implementation phase �
 
 | Plan | Phase | Status |
 |---|---|---|
-| [plan-1.md](plan-1.md) | Phase 1 — Core Map | Drafted, not started |
+| [plan-1.md](plan-1.md) | Phase 1 — Core Map | Track A complete; Track B blocked on Firebase project creation (user action) |
 
 ## Rule
 

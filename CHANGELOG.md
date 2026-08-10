@@ -23,3 +23,21 @@ All notable changes to PlotLens are recorded here. Format loosely follows Keep a
 ### Status
 
 No application code exists yet. Project is in the pre-development/planning phase — see `docs/PRODUCT_REQUIREMENTS.md` for the frozen MVP scope and `AGENTS.md` for what an AI agent may and may not do at this stage.
+
+## 2026-08-10 (later) — Phase 0 + Phase 1 Track A
+
+### Added
+
+- Git repository initialized.
+- Next.js (App Router) + TypeScript + Tailwind v4 scaffolded; dark-only theme tokens and Inter font wired per `docs/design/DESIGN_SYSTEM.md`; Vitest configured.
+- shadcn/base-nova UI primitives added (`Button`, `Card`, `Dialog`, `Input`, `DropdownMenu`, `Label`) and re-themed to PlotLens tokens — see `docs/plans/plan-1.md` implementation notes on why the default shadcn registry was used instead of ReUI's hosted registry.
+- `src/gis/coordinates.ts` and `src/gis/mapState.ts`: coordinate-order and map-state conversion helpers, with unit tests covering the lng/lat-swap bug class `docs/GIS_ARCHITECTURE.md` warns about.
+- `src/map/`: `MapEngine` (vanilla MapLibre GL JS wrapper), OSM raster style, re-skinned zoom/compass/scale controls.
+- Static shell UI: Projects screen (`ProjectList`/`ProjectCard`/`EmptyState`/`NewProjectDialog`) and the map workspace (`TopBar`/`ProjectWorkspace`/`MapCanvas`), currently backed by mock project data (Track A placeholder).
+- `docs/DATA_SOURCES.md`: Nominatim entry added with `status: verified` (usage policy fetched live this session) — search is explicit-submit only, per policy (no client-side autocomplete).
+- `src/app/api/geocode/route.ts` + `src/components/search/LocationSearch.tsx`: server-side Nominatim proxy and explicit-submit search UI, documented in `docs/API_CONTRACTS.md`.
+- `firestore.rules` (deny-by-default, owner-only, IDOR-safe) + `tests/integration/firestore-rules.test.ts` (10 tests, run via `npm run test:rules` against the Firestore Emulator) — all passing.
+
+### Status
+
+Phase 1 "Track A" (everything not requiring a real Firebase project) is complete and verified: build passes, lint is clean, 11 unit tests pass, 10 Firestore rule/IDOR tests pass against the Emulator. **Phase 1 "Track B" is blocked** on the user creating a real Firebase project and populating `.env.local` — see `docs/plans/plan-1.md` "Open questions / blockers". No real persistence exists yet; the app currently runs entirely on mock data.

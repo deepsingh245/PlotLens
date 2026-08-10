@@ -6,7 +6,16 @@ PlotLens is a personal GIS investigation workspace for property, land, and infra
 
 PlotLens is **not** a property marketplace, not a listings site, and not a legal title-verification tool. See [docs/PROJECT_SPEC.md](docs/PROJECT_SPEC.md) §4 for the legal/data principle this project is built around.
 
-**Status: pre-development / planning.** No application code has been written yet. This repository currently exists to establish product, architecture, data-source, and security decisions before the first line of code is written.
+**Status: Phase 1 (Core Map) in progress.** The app scaffolding, map rendering, static shell UI, location search, and Firestore security rules exist and are tested — see [docs/plans/plan-1.md](docs/plans/plan-1.md). Real data persistence is blocked on creating a Firebase project (see that file's "Open questions / blockers").
+
+## Getting started
+
+```bash
+npm install
+npm run dev       # http://localhost:3000
+npm run test      # unit tests (Vitest)
+npm run test:rules # Firestore security rule tests, against the Emulator — no real Firebase project needed
+```
 
 ## Start here
 
@@ -23,9 +32,9 @@ PlotLens is **not** a property marketplace, not a listings site, and not a legal
 | See the full docs map | [docs/README.md](docs/README.md) |
 | Act as an AI coding agent on this repo | [AGENTS.md](AGENTS.md) |
 
-## Tech stack (decided, not yet implemented)
+## Tech stack
 
-Next.js + TypeScript + React · MapLibre GL JS · Turf.js · Firebase (Firestore + Storage)
+Next.js + TypeScript + React · Tailwind v4 · MapLibre GL JS · Firebase (Firestore + Auth; Storage from Phase 3) · Turf.js (from Phase 7)
 
 See [docs/ADR/](docs/ADR/) for the reasoning behind each choice.
 
@@ -42,10 +51,19 @@ PlotLens/
 ├── docs/                 canonical project documentation (see docs/README.md)
 │   ├── ADR/               architecture decision records
 │   ├── design/            UX/design canonical docs
+│   ├── plans/             per-phase execution plans
 │   └── research/          raw research/spec material that fed the canonical docs
-├── src/                   (not yet created)
-├── tests/                 (not yet created)
-└── public/                (not yet created)
+├── src/
+│   ├── app/               Next.js routes (Projects screen, project workspace, /api/geocode)
+│   ├── components/        shell/, map/, projects/, search/ UI
+│   ├── gis/               pure coordinate/map-state helpers (no React)
+│   ├── map/               MapEngine (vanilla MapLibre wrapper)
+│   └── projects/          domain types + Track A mock data
+├── tests/
+│   ├── unit/              Vitest — GIS helpers
+│   └── integration/       Firestore rule tests (Emulator)
+├── firestore.rules
+└── public/
 ```
 
 ## Contributing / working on this project

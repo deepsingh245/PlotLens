@@ -1,0 +1,35 @@
+import Link from "next/link";
+import { SaveStatusIndicator, type SaveStatus } from "./SaveStatusIndicator";
+import { ProjectMenu } from "./ProjectMenu";
+import { LocationSearch } from "@/components/search/LocationSearch";
+import type { GeocodeResult } from "@/app/api/geocode/route";
+
+/**
+ * Exactly 34px — see docs/design/DESIGN_SYSTEM.md §Validated layout dimensions.
+ */
+export function TopBar({
+  projectName,
+  saveStatus = "idle",
+  onSearchSelect,
+}: {
+  projectName: string;
+  saveStatus?: SaveStatus;
+  onSearchSelect?: (result: GeocodeResult) => void;
+}) {
+  return (
+    <div
+      className="flex items-center gap-3 border-b border-border bg-surface px-3"
+      style={{ height: 34 }}
+    >
+      <Link href="/" className="text-text-primary text-sm font-medium">
+        PlotLens
+      </Link>
+      <span className="text-text-secondary text-sm">{projectName}</span>
+      <div className="flex flex-1 justify-center">
+        {onSearchSelect && <LocationSearch onSelect={onSearchSelect} />}
+      </div>
+      <SaveStatusIndicator status={saveStatus} />
+      <ProjectMenu />
+    </div>
+  );
+}

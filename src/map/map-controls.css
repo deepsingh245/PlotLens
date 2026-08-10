@@ -1,0 +1,39 @@
+/*
+ * Re-skins MapLibre's built-in NavigationControl/ScaleControl to PlotLens's
+ * tokens instead of hand-building zoom/compass/scale math — see
+ * docs/design/MAP_INTERACTIONS.md ("visually quiet, never competing with the
+ * map") and docs/PLANNING.md Phase 1 component-library map.
+ */
+
+.maplibregl-ctrl-group {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+}
+
+.maplibregl-ctrl-group button {
+  background: transparent;
+}
+
+.maplibregl-ctrl-group button:not(:disabled):hover {
+  background: var(--surface);
+}
+
+.maplibregl-ctrl-scale {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+}
+
+.maplibregl-ctrl-attrib {
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: var(--text-secondary);
+}

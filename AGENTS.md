@@ -8,9 +8,9 @@ A personal GIS investigation workspace for property/land/infrastructure research
 
 ## Current phase
 
-**Pre-development / planning.** No `src/` exists yet. Do not scaffold the application, install dependencies, or write implementation code unless the user explicitly asks for that in the current conversation. Until then, work is limited to docs, ADRs, and planning artifacts.
+**Phase 1 — Core Map, Track A complete, Track B blocked.** See [docs/plans/plan-1.md](docs/plans/plan-1.md) for the exact status. The app scaffolding, GIS helpers, map rendering, static shell UI, location search, and Firestore security rules (Emulator-tested) are all in place and passing. Real Firestore persistence (Track B) is blocked on the user creating a Firebase project and populating `.env.local` — do not attempt to work around this by hardcoding credentials or weakening the security rules.
 
-Once implementation begins, the current milestone is tracked in [CHANGELOG.md](CHANGELOG.md) and the phase list in [docs/PRODUCT_REQUIREMENTS.md](docs/PRODUCT_REQUIREMENTS.md). Only build the current milestone. Do not implement later phases early because they're described in the spec.
+The current milestone is tracked in [CHANGELOG.md](CHANGELOG.md) and [docs/plans/](docs/plans/). Only build the current milestone/phase's task list. Do not implement later phases early because they're described in the spec — check [docs/PRODUCT_REQUIREMENTS.md](docs/PRODUCT_REQUIREMENTS.md)'s phase roadmap before adding anything not in the current `plan-N.md`.
 
 ## Before writing any code, read
 
@@ -84,3 +84,13 @@ Default CRS is **WGS84 / EPSG:4326**. GeoJSON coordinate order is **[longitude, 
 ## Reporting back
 
 After completing a task: state what was implemented, what assumptions were made, what tests were added/updated, and what docs were updated. Update [CHANGELOG.md](CHANGELOG.md) for any user-visible change.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

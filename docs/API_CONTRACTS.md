@@ -2,9 +2,17 @@
 
 Internal API surface truth. No endpoints exist yet — this document is the place to record them as they're built, so no route gets created without being documented here. Do not create an endpoint that isn't listed here; add it here first (or in the same change).
 
-## Status
+## Implemented
 
-**Empty — no `src/` exists yet.** This file will be populated starting in Phase 1 (project persistence) and Phase 3 (image overlay upload).
+### GET /api/geocode
+
+Purpose: server-side proxy to Nominatim for explicit-submit location search (see [DATA_SOURCES.md](DATA_SOURCES.md)'s Nominatim entry — client-side autocomplete is prohibited by policy, so this is called on explicit submit only, never per keystroke).
+Auth required: no (read-only, public place-name search; no user data involved)
+Ownership check: n/a
+Request: `?q=<query text>`
+Response: `{ results: [{ label: string, lngLat: { lng: number, lat: number } }] }` or `{ error: string }`
+Rate limit: throttled server-side to ≤1 req/sec to Nominatim (see [SECURITY.md](SECURITY.md) §Rate limiting); returns `429` if called faster than that
+Added: 2026-08-10, Phase 1
 
 ## Expected shape (planned, not yet implemented)
 

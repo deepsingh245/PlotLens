@@ -4,6 +4,15 @@ node_modules/
 # Next.js build output
 .next/
 out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Testing
+/coverage
+
+# Vercel
+.vercel
 
 # Environment / secrets — never commit real env files
 .env

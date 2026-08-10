@@ -45,7 +45,7 @@ notes:
 provider: OpenStreetMap
 dataset: base map tiles
 service: raster tile (XYZ)
-url: <to be set — public tile.openstreetmap.org is NOT approved for anything beyond light personal/dev use>
+url: https://tile.openstreetmap.org/{z}/{x}/{y}.png (dev only, overridable via NEXT_PUBLIC_MAP_STYLE_URL — see notes; public tile.openstreetmap.org is NOT approved for anything beyond light personal/dev use)
 type: raster
 authentication: none
 attribution: "© OpenStreetMap contributors" — must remain visible on the map
@@ -60,6 +60,29 @@ crs: EPSG:3857 (Web Mercator tiles)
 last_verified: 2026-08-10 (policy summary only — re-verify current OSM tile usage policy text before Phase 1 ships)
 status: experimental
 notes: Acceptable for personal-prototype development. Before any usage beyond that, switch to a dedicated OSM-derived tile provider or commercial provider — see ARCHITECTURE.md and PROJECT_SPEC.md §5.
+```
+
+### Nominatim (OpenStreetMap Foundation)
+
+```yaml
+provider: Nominatim (OpenStreetMap Foundation)
+dataset: forward geocoding / place search
+service: REST (search endpoint)
+url: https://nominatim.openstreetmap.org/search
+type: vector (structured JSON results; not a tile/raster layer)
+authentication: none required, but a valid identifying HTTP User-Agent (and/or Referer) is required by policy — generic library defaults are not sufficient
+attribution: "© OpenStreetMap contributors" — must be shown wherever search results are surfaced, same as the base map
+license: ODbL (underlying OSM data); the Nominatim *service* itself is additionally governed by the separate Nominatim Usage Policy
+commercial_use_allowed: yes for the underlying data under ODbL; the public nominatim.openstreetmap.org endpoint is for reasonable/non-heavy use only — see usage_restrictions
+caching_allowed: yes — results must be cached client-side per policy; repeatedly submitting identical queries may get a client blocked
+storage_allowed: do not persist raw response payloads beyond the current search session; storing a coordinate the user explicitly selects (as Project.map.center) is normal user data, not bulk harvesting
+derivative_data_allowed: yes, with attribution, subject to ODbL and the Nominatim usage policy
+rate_limits: maximum 1 request/second for general/interactive use (bulk/periodic scripted use is capped far lower — 4 requests/minute — and is discouraged; not relevant to PlotLens's interactive search)
+usage_restrictions: client-side autocomplete/typeahead is explicitly prohibited by policy ("This is not yet supported by Nominatim and you must not implement such a service on the client side using the API") — search in PlotLens is therefore explicit-submit only (type → Enter/click → results list), never live-suggest-as-you-type; must be called from a server-side proxy, never directly from browser JS (browsers block scripts from setting a custom User-Agent header); the proxy enforces a strict domain allowlist (nominatim.openstreetmap.org only, per SECURITY.md §SSRF) and its own throttle; apps whose *primary* function is geocoding must run their own service — not applicable to PlotLens, whose primary function is GIS investigation
+crs: WGS84 / EPSG:4326 — returns decimal lat/lon as strings; converted to the app's [lng, lat] order via src/gis/coordinates.ts, never inline
+last_verified: 2026-08-10 (fetched directly from the live policy at operations.osmfoundation.org/policies/nominatim/ this session)
+status: verified
+notes: Lowest-friction personal-scale default, consistent with the OSM base map already in use. Implemented as a Next.js Route Handler proxy (src/app/api/geocode/route.ts), not a direct client fetch — required both for the User-Agent header and to centralize the rate limit. Reconsider (self-hosted Nominatim, or a paid geocoder) if this app is ever used beyond a single personal owner.
 ```
 
 ### Bhuvan / NRSC

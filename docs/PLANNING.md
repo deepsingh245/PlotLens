@@ -55,6 +55,8 @@ Full rationale and component/spacing/radius tokens: [design/DESIGN_SYSTEM.md](de
 
 **Exit criteria:** app boots, shows an empty themed page in the correct font, dark background — nothing else. No entry in [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) needed for this phase (it has no observable feature).
 
+**Status: done** (2026-08-10) — see [plans/plan-1.md](plans/plan-1.md) implementation notes for what changed along the way (e.g. Tailwind v4 CSS-first theming, MapLibre v6 has no default export).
+
 ---
 
 ## Phase 1 — Core map
@@ -73,7 +75,7 @@ Full rationale and component/spacing/radius tokens: [design/DESIGN_SYSTEM.md](de
 
 **Exit criteria:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) §Project system.
 
-**Detailed task plan:** [plans/plan-1.md](plans/plan-1.md).
+**Detailed task plan:** [plans/plan-1.md](plans/plan-1.md). **Status: Track A complete, Track B blocked** on the user creating a real Firebase project — see that file's "Open questions / blockers".
 
 ---
 
