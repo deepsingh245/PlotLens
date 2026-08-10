@@ -95,7 +95,7 @@ Full rationale and component/spacing/radius tokens: [design/DESIGN_SYSTEM.md](de
 
 **Exit criteria:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) §Drawing.
 
-**Detailed task plan:** [plans/plan-2.md](plans/plan-2.md) — includes a new dependency decision (a drawing library, since MapLibre ships none) that needs confirmation before implementation starts.
+**Detailed task plan:** [plans/plan-2.md](plans/plan-2.md). **Status: Track A complete, Track B blocked** on the same Firebase prerequisite as Phase 1 — see that file's "Open questions / blockers". Drawing library: Terra Draw, confirmed and adopted — see [ADR/0006-drawing-library.md](ADR/0006-drawing-library.md).
 
 ---
 

@@ -2,6 +2,27 @@
 
 All notable changes to PlotLens are recorded here. Format loosely follows Keep a Changelog; dates are `YYYY-MM-DD`.
 
+## 2026-08-11 — Phase 2 (Drawing) Track A
+
+### Added
+
+- `terra-draw` + `terra-draw-maplibre-gl-adapter` adopted for drawing point/line/polygon/circle annotations; `docs/ADR/0006-drawing-library.md` records the decision.
+- `src/gis/geojson.ts` + `src/gis/annotationGeometry.ts`: PlotLens's own GeoJSON geometry types and the untrusted-input validation boundary for everything Terra Draw produces (19 unit tests).
+- `src/map/DrawingManager.ts` + `useDrawingManager.ts`: wraps Terra Draw the way `MapEngine` wraps vanilla MapLibre — verified against the installed package's actual API (mode names, `finish`/`change`/`select`/`deselect` events, the destructive vs. idle meaning of `stop()`), not assumed.
+- `src/projects/annotations/`: `Annotation` domain type, Track A mock store, `useAnnotations` hook.
+- `src/components/map/ToolRail.tsx` + `useToolShortcuts.ts`: 5-tool rail (Pin/Line/Polygon/Circle/Note), keyboard shortcuts `P`/`L`/`G`/`C`/`N`/`Esc`.
+- `src/components/annotations/`: `AnnotationPanel` (desktop `Card` / mobile `Sheet`), `AnnotationForm`, `DeleteAnnotationDialog`.
+- `src/components/projects/ProjectWorkspace.tsx`: wired drawing, tool selection, annotation CRUD, and the text-annotation marker flow together.
+- `docs/design/MAP_INTERACTIONS.md`: keyboard shortcuts updated to include `C` (circle).
+
+### Fixed
+
+- A new `react-hooks/set-state-in-effect` lint rule caught a genuine anti-pattern in `AnnotationForm` (syncing local state from a prop via `useEffect` — fixed by keying the component on `annotation.id` instead) and in `useMediaQuery` (rewritten on `useSyncExternalStore`, the correct primitive for subscribing to `matchMedia`).
+
+### Status
+
+Phase 2 Track A (drawing UI, mock persistence) is complete and verified: build/lint/typecheck clean, 30/30 unit tests pass, basic dev-server smoke test clean. **Track B is blocked** on the same Firebase project prerequisite as Phase 1 — see `docs/plans/plan-2.md`. Interactive drawing behavior (vertex dragging, circle resize, touch) has not yet been manually verified in a real browser.
+
 ## 2026-08-10
 
 ### Added

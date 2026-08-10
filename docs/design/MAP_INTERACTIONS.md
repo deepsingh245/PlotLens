@@ -107,4 +107,4 @@ Needed for drawing/positioning tools specifically: polygon drawing, line drawing
 
 ## Keyboard shortcuts (indicative, finalize during implementation)
 
-`P` pin · `L` line · `G` polygon · `M` measure · `N` note · `O` overlay · `Esc` cancel current tool · `Space` pan · `Delete` delete selected · `Ctrl/Cmd+Z` undo · `Ctrl/Cmd+Shift+Z` redo. Surface these in tooltips rather than requiring a separate help screen.
+`P` pin · `L` line · `G` polygon · `C` circle · `M` measure · `N` note · `O` overlay · `Esc` cancel current tool · `Space` pan · `Delete` delete selected · `Ctrl/Cmd+Z` undo · `Ctrl/Cmd+Shift+Z` redo. Surface these in tooltips rather than requiring a separate help screen.

@@ -1,6 +1,13 @@
 # Plan 2 — Phase 2: Drawing
 
-**Status:** drafted, not started. **Depends on:** Phase 1 exit criteria met — see [../ACCEPTANCE_CRITERIA.md](../ACCEPTANCE_CRITERIA.md) §Project system. As of this writing, Phase 1 Track A (map/shell/search) is complete but Track B (real Firestore persistence) is still blocked on the user creating a Firebase project — see [plan-1.md](plan-1.md). This phase follows the same Track A/B split for the same reason; if Firebase is already set up by the time this phase starts, skip straight to full persistence in Task 3 rather than building a mock-data track first.
+**Status:** Track A complete (2026-08-11) — drawing (point/line/polygon/circle via Terra Draw, text via a custom marker), the tool rail, the annotation contextual panel, and in-memory mock persistence are all built, type-checked, lint-clean, and unit-tested. **Track B (real Firestore persistence + rules) is still blocked** on the user creating a Firebase project — same blocker as [plan-1.md](plan-1.md); Tasks 3 and 5's real-Firestore halves are not started.
+
+**Implementation notes (read before continuing Track B):**
+- Terra Draw's real API differs from this doc's original sketch in a few verified ways: there's no `start(mode)`/`stop()` pair on the `TerraDraw` class itself — `start()` takes no arguments (activates the instance once), mode switching is `setMode(mode)`, and `TerraDraw.stop()` is the *destructive* full teardown (clears the store, deregisters the adapter) — it maps to `DrawingManager.destroy()`, not to "pause drawing." `DrawingManager.stop()` instead calls `setMode("select")` to return to an idle/editable state. The `finish` event (not `create`) fires on a completed drawing, with `(id, {mode})` — no need to inspect `rawFeature.properties.mode`. Generic geometry edits arrive via the `change` event with a `type` field, filtered to only forward `type === "update"` for ids already known to `DrawingManager`. Mode name strings are `point`/`linestring`/`polygon`/`circle`/`select` — note `"linestring"`, not `"line"` (our own `DrawTool` vocabulary keeps `"line"`; `DrawingManager` is the only place that translates between the two). All verified against the installed package's `.d.ts` and bundled source, not assumed.
+- `ToolRail`/`AnnotationPanel` ended up sourcing every primitive from the **default shadcn registry** (`tooltip`, `sheet`) — same precedent as Phase 1, no ReUI-registry paywall hit this time. `popover` was skipped entirely; the desktop panel uses `Card` as a real flex sibling instead, so it never needed a floating-anchor primitive.
+- A new ESLint rule (`react-hooks/set-state-in-effect`, part of an updated `eslint-plugin-react-hooks`) flagged four spots. Two were genuine anti-patterns and got real fixes: `AnnotationForm` no longer syncs local state from a prop via `useEffect` (it's keyed by `annotation.id` from `AnnotationPanel` and remounts instead), and `useMediaQuery` was rewritten on `useSyncExternalStore` (the correct primitive for subscribing to `matchMedia`, not a lint workaround). The other two (`useDrawingManager`, `useAnnotations`) are legitimate "initialize once a dependency becomes ready" effects — the same shape `useMapEngine.ts` already uses unflagged — and got a justified inline suppression instead of a forced rewrite.
+- Mobile bottom-toolbar collapse (tool rail → `Pin · Draw · Measure · Layers · More`) from the "Mobile vs. web" section below was **not built** — only `AnnotationPanel`'s mobile bottom-sheet behavior was in this phase's actual scope. Tracked as a known follow-on, not a regression.
+- Circle resize-after-creation (via `TerraDrawSelectMode`'s `scaleable` flag) is wired but **not yet manually verified** — the "known risk" flagged in this doc's original draft. If it doesn't work cleanly, drop `scaleable` and ship circle as create/delete-only.
 
 This is the detailed task breakdown for [../PLANNING.md](../PLANNING.md) Phase 2 / [../PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) Phase 2 ("the user can investigate a location manually"). It assumes the reader has skimmed [../AGENTS.md](../../AGENTS.md), [plan-1.md](plan-1.md), and the current `src/` tree it produced.
 
@@ -31,30 +38,29 @@ This is a new dependency (see [../AGENTS.md](../../AGENTS.md) rule 9, "avoid unn
 ## Task breakdown
 
 ### 1. Drawing interaction layer (`src/map/`, `src/gis/`)
-- [ ] Confirm the Terra Draw decision above (or the chosen alternative); install it and its MapLibre adapter.
-- [ ] `src/map/DrawingManager.ts` — wraps the Terra Draw instance the same way `MapEngine.ts` wraps vanilla MapLibre: `start(mode)`, `stop()`, `on(event, callback)` for finish/edit/delete events, `getFeatures()`. Keeps Terra Draw's API out of React components directly, matching [../ARCHITECTURE.md](../ARCHITECTURE.md) rule 2.
-- [ ] `src/gis/annotationGeometry.ts` — validates a drawn feature before it's treated as a savable `Annotation` (geometry type matches the active tool, coordinate count is bounded per [../SECURITY.md](../SECURITY.md) §GeoJSON Security) and converts Terra Draw's output into the `Annotation.geometry` shape. This is where the "circle → polygon" mapping from above lives, not inline in a component.
-- [ ] Unit tests: geometry validation accepts well-formed features and rejects a degenerate one (e.g. a 1-point "polygon"), per the minimum GIS test coverage in [../GIS_ARCHITECTURE.md](../GIS_ARCHITECTURE.md) §Testing requirements.
+- [x] Terra Draw confirmed by the user; `terra-draw` + `terra-draw-maplibre-gl-adapter` installed.
+- [x] `src/map/DrawingManager.ts` — wraps Terra Draw: `start(tool)`, `stop()` (returns to select mode — see implementation notes above for why this isn't Terra Draw's own `stop()`), `addExistingFeature`, `removeFeature`, `on(event, callback)` for `create`/`update`/`select`/`deselect`, `destroy()`.
+- [x] `src/gis/annotationGeometry.ts` — `validateDrawnFeature`, `toAnnotationGeometry`, `annotationTypeForTool`, `locationSummary`. Circle→polygon mapping lives here.
+- [x] Unit tests (`tests/unit/gis/annotationGeometry.test.ts`, 19 cases): valid/degenerate/unclosed-ring/holed/mismatched-type/out-of-bounds/oversized cases per tool, circle-as-polygon tagging, `locationSummary` centroid check. All passing.
 
 ### 2. Tool rail UI (`src/components/map/`, `src/components/shell/`)
-- [ ] `ToolRail.tsx` — right-side, **34px** wide (validated dimension, [../design/DESIGN_SYSTEM.md](../design/DESIGN_SYSTEM.md)), icon buttons for Pin / Line / Polygon / Circle / Note, each with a tooltip and an obvious active state (accent-colored per [../design/DESIGN_SYSTEM.md](../design/DESIGN_SYSTEM.md) — "accent only for active/selected states").
-- [ ] Direct-manipulation flow, not modal-first: click tool → cursor changes → draw on map → finish (double-click/Enter for line/polygon, single click for pin/note) — see [../design/MAP_INTERACTIONS.md](../design/MAP_INTERACTIONS.md) §Interaction model. `Esc` cancels the current in-progress draw.
-- [ ] Keyboard shortcuts per [../design/MAP_INTERACTIONS.md](../design/MAP_INTERACTIONS.md) §Keyboard shortcuts (`P`/`L`/`G`/`N`, plus `C` for Circle — not yet listed there, add it in the same change): surfaced as tooltips, not a separate help screen.
+- [x] `ToolRail.tsx` — right-side, 34px wide, 5 icon buttons (Pin/Line/Polygon/Circle/Note) with `Tooltip`, accent-colored active state via a `data-active` attribute.
+- [x] Direct-manipulation flow via `DrawingManager` — see Task 7 wiring in `ProjectWorkspace.tsx`. `Esc` cancels via `useToolShortcuts`.
+- [x] `useToolShortcuts.ts` — `P`/`L`/`G`/`C`/`N` + `Esc`, guarded against firing while an input/textarea is focused. `docs/design/MAP_INTERACTIONS.md`'s shortcut line updated to include `C` in the same change.
 
 ### 3. Annotation data layer (`src/projects/`, `src/storage/`)
-- [ ] Model `Annotation` as a Firestore **subcollection** of its project (`projects/{projectId}/annotations/{annotationId}`), not a top-level collection — this lets ownership be enforced by checking the parent project's `ownerId` (see Task 5's rules), consistent with the tree in [../SECURITY.md](../SECURITY.md) §Authorization model.
-- [ ] `src/storage/annotations.ts` — CRUD: `createAnnotation`, `updateAnnotation` (geometry and/or title/description/tags), `deleteAnnotation`, `listAnnotations(projectId)`.
-- [ ] `src/projects/annotations/useAnnotations.ts` — live `onSnapshot` subscription scoped to the open project, replacing any Track A mock state.
-- [ ] **If Track B from Phase 1 is still blocked:** build this task against an in-memory mock store first (same pattern as `src/projects/mockProjects.ts`) so Tasks 2 and 4 aren't blocked waiting on Firebase; swap in the real Firestore-backed version once unblocked, per [plan-1.md](plan-1.md)'s Track A/B precedent.
+- [x] `Annotation` modeled for a Firestore subcollection (`projects/{projectId}/annotations/{annotationId}`) — types written in `src/projects/annotations/types.ts`; the real Firestore calls themselves are Track B (below).
+- [x] `src/storage/annotations.ts` — `createAnnotation`/`updateAnnotation`/`deleteAnnotation`/`listAnnotations(projectId)`, Track A body (in-memory `Map`, seeded from `mockAnnotations.ts`). Re-validates geometry via `annotationGeometry` before accepting — this is the actual security enforcement point.
+- [x] `src/projects/annotations/useAnnotations.ts` — Track A body (local `useState`, optimistic updates). Live `onSnapshot` is Track B.
+- [x] Built against an in-memory mock store first, per the "if Track B is still blocked" fallback — Firebase remains blocked as of this writing.
 
 ### 4. Annotation contextual panel (`src/components/annotations/`)
-- [ ] `AnnotationPanel.tsx` — opens when an annotation is clicked/selected: title, description, tags, geometry-derived location (reuse `src/lib/format.ts`'s `formatCoordinate` for a point; a line/polygon shows its first vertex or centroid, not a raw coordinate array), edit and delete actions. Desktop: side panel or floating card, never a full-page navigation. Mobile (`<768px`): bottom sheet.
-- [ ] Delete requires a confirmation step (destructive action) — this is one of the "genuinely need focused confirmation" cases [../design/MAP_INTERACTIONS.md](../design/MAP_INTERACTIONS.md) §Contextual panels over modals carves out for a modal/dialog rather than the panel itself.
-- [ ] For a freshly-placed `text` annotation, open this panel automatically so the label can be typed immediately (see the data-model note above).
+- [x] `AnnotationPanel.tsx` (+ `AnnotationForm.tsx`, `DeleteAnnotationDialog.tsx`) — title/description/tags/location, edit/delete. Desktop: `Card` as a real flex sibling (not floating — avoids the top-right `NavigationControl`). Mobile (`useMediaQuery`, `<768px`): `Sheet` with `side="bottom"`.
+- [x] Delete requires confirmation (`DeleteAnnotationDialog`, shadcn `Dialog`).
+- [x] Freshly-placed `text` annotations auto-open the panel with the title field focused (`justCreatedId` state in `ProjectWorkspace.tsx`).
 
 ### 5. Firestore rules + Emulator tests for annotations
-- [ ] Extend `firestore.rules` with an `annotations` subcollection match block under `projects/{projectId}`, checking the *parent* project's `ownerId` via `get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId` — deny-by-default still applies via the existing top-level catch-all.
-- [ ] Extend `tests/integration/firestore-rules.test.ts` (or add a sibling file) with the same IDOR matrix Phase 1 used for `Project`, applied to `annotations`: unauthenticated denied, owner CRUD succeeds, a second user's read/update/delete all denied — see [../SECURITY_TEST_PLAN.md](../SECURITY_TEST_PLAN.md).
+- [ ] **Not started — blocked on Task 1's Firebase prerequisite (same as Phase 1).** `firestore.rules`' `annotations` subcollection match block and `tests/integration/annotations-rules.test.ts` are Track B work; see that section below for the exact rule/test shape planned.
 
 ### 6. Undo/redo (should-have, not a Task 1–5 blocker)
 - [ ] A small history stack (last-N operations: create/edit/delete) scoped to the current drawing session, `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` — see [../design/MAP_INTERACTIONS.md](../design/MAP_INTERACTIONS.md) §Undo/redo ("should not be deferred indefinitely," but explicitly not a hard MVP blocker). Sequence this after Tasks 1–5 are working, not before.
@@ -81,28 +87,28 @@ Building on Phase 1's substitution precedent (ReUI's hosted registry paywalled a
 
 | UI element | Source |
 |---|---|
-| Tool rail icon buttons + tooltips | shadcn `Button` (already added) + `Tooltip` (not yet added — `npx shadcn@latest add tooltip`) |
-| Active-tool styling | CSS state on `Button`, no new primitive |
-| Desktop annotation panel | shadcn `Card` (already added) or `Popover` (not yet added) |
-| Mobile annotation bottom sheet | shadcn `Sheet` / Base UI `Drawer` primitive (not yet added — evaluate `sheet` vs. building on the `Dialog` primitive already in the project) |
-| Delete confirmation | shadcn `Dialog` (already added) |
+| Tool rail icon buttons + tooltips | shadcn `Button` + `Tooltip` (added, default registry — no paywall this time) |
+| Active-tool styling | `data-active` attribute + Tailwind on `Button`, no new primitive |
+| Desktop annotation panel | shadcn `Card`, as a real flex sibling — `Popover` skipped, not needed |
+| Mobile annotation bottom sheet | shadcn `Sheet`, `side="bottom"` (added, default registry) |
+| Delete confirmation | shadcn `Dialog` (already had it from Phase 1) |
 
 ## Security checklist for this phase (see ../SECURITY_TEST_PLAN.md)
 
-- [ ] Unauthenticated Firestore read on any `annotations` subcollection → denied.
-- [ ] User A reads/edits/deletes User B's project's annotations → denied.
-- [ ] No `allow read, write: if true` anywhere in the updated `firestore.rules`.
-- [ ] Drawn geometry is validated (type, coordinate bounds/count) before being written — never trust Terra Draw's raw output as pre-sanitized, per [../DATA_MODEL.md](../DATA_MODEL.md) §Validation rules ("apply regardless of Security Rules").
+- [ ] Unauthenticated Firestore read on any `annotations` subcollection → denied. **(Track B — not yet applicable, no real Firestore rules deployed.)**
+- [ ] User A reads/edits/deletes User B's project's annotations → denied. **(Track B.)**
+- [x] No `allow read, write: if true` anywhere in `firestore.rules` (unchanged from Phase 1 — no annotations block added yet).
+- [x] Drawn geometry is validated (type, coordinate bounds/count) before being written — `createAnnotation`/`updateAnnotation` in `src/storage/annotations.ts` call `validateDrawnFeature` before accepting anything, never trusting Terra Draw's raw output as pre-sanitized.
 
 ## Exit criteria
 
-[../ACCEPTANCE_CRITERIA.md](../ACCEPTANCE_CRITERIA.md) §Drawing, in full: every annotation type renders at the correct geographic location, persists on save, survives reload, and can be edited or deleted afterward.
+[../ACCEPTANCE_CRITERIA.md](../ACCEPTANCE_CRITERIA.md) §Drawing, in full: every annotation type renders at the correct geographic location, persists on save, survives reload, and can be edited or deleted afterward. **Not yet met** — "survives reload" needs Track B (real Firestore); everything else is built and passing automated checks (build/lint/typecheck/unit tests) plus a basic manual smoke test (dev server, tool-rail buttons render, no runtime errors). Full interactive drawing (actually dragging vertices, resizing a circle, touch behavior) has **not** been manually verified in a real browser this session — flagged as the next thing to check, not assumed working.
 
 ## Open questions / blockers
 
-- **Drawing library choice (Terra Draw vs. an alternative) needs confirmation before Task 1** — see "A new dependency decision to confirm" above.
-- **Firebase project** — if still not created by the time this phase starts, Task 3 follows the same Track A (mock data) / Track B (real Firestore) split as [plan-1.md](plan-1.md); resolve the same way (user creates the project, fills in `.env.local`).
-- Whether Terra Draw's touch/mobile support is solid enough to ship without a fallback — verify early in Task 1 rather than discovering it late in Task 2.
+- **Firebase project not yet created — blocks all of Track B** (Task 3's real persistence, Task 5's rules/tests). Same user action items as [plan-1.md](plan-1.md).
+- **Interactive drawing behavior needs real manual verification** (drag vertices, circle resize via `scaleable`, touch support) — automated checks confirm the code compiles and the static markup renders, not that Terra Draw's runtime interaction actually behaves as designed.
+- Undo/redo (Task 6) not started — correctly sequenced last, per this doc's own instruction.
 
 ## Next
 

@@ -46,7 +46,7 @@ COMPLIANCE.md         → regulatory truth
 - [GIS_ARCHITECTURE.md](GIS_ARCHITECTURE.md) — CRS, GeoJSON conventions, georeferencing, measurement.
 - [PROVIDER_ARCHITECTURE.md](PROVIDER_ARCHITECTURE.md) — the provider adapter contract for map/GIS data sources.
 - [API_CONTRACTS.md](API_CONTRACTS.md) — internal API surface.
-- [ADR/](ADR/) — architecture decision records (map engine, storage, provider system, coordinate system, UI component library).
+- [ADR/](ADR/) — architecture decision records (map engine, storage, provider system, coordinate system, UI component library, drawing library).
 
 ### Data & external sources
 
