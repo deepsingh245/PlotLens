@@ -8,7 +8,7 @@ Avoid a modal-heavy flow (click tool → open modal → configure → close moda
 
 ## Map tool set
 
-**MVP (v0.1):** Pin, Line, Polygon, Note, Image Overlay — matches [../PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md).
+**MVP (v0.1):** Pin, Line, Polygon, Circle, Note, Image Overlay — matches [../PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md)'s Drawing scope (marker/line/polygon/circle/text annotation). An earlier version of this list omitted Circle; PRODUCT_REQUIREMENTS.md is the frozen-scope source of truth (see [../README.md](../README.md) index) — reconciled here.
 
 **v0.2+:** Measure Distance, Measure Area, Export.
 

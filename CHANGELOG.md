@@ -41,3 +41,14 @@ No application code exists yet. Project is in the pre-development/planning phase
 ### Status
 
 Phase 1 "Track A" (everything not requiring a real Firebase project) is complete and verified: build passes, lint is clean, 11 unit tests pass, 10 Firestore rule/IDOR tests pass against the Emulator. **Phase 1 "Track B" is blocked** on the user creating a real Firebase project and populating `.env.local` — see `docs/plans/plan-1.md` "Open questions / blockers". No real persistence exists yet; the app currently runs entirely on mock data.
+
+## 2026-08-10 (later still) — Phase 2 planning
+
+### Added
+
+- `docs/plans/plan-2.md`: detailed task breakdown for Phase 2 (Drawing) — pin/line/polygon/circle/text annotations, contextual panel, Firestore `annotations` subcollection + IDOR tests. Flags a new dependency decision (a MapLibre drawing library — Terra Draw recommended) that needs confirmation before implementation starts, and documents that circle annotations store as polygon approximations (GeoJSON has no native Circle type).
+- `docs/design/MAP_INTERACTIONS.md`: MVP tool list corrected to include Circle, matching `PRODUCT_REQUIREMENTS.md`'s frozen Drawing scope (it was previously missing from that list only).
+
+### Status
+
+Planning only — no Phase 2 code written yet.

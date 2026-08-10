@@ -95,6 +95,8 @@ Full rationale and component/spacing/radius tokens: [design/DESIGN_SYSTEM.md](de
 
 **Exit criteria:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) §Drawing.
 
+**Detailed task plan:** [plans/plan-2.md](plans/plan-2.md) — includes a new dependency decision (a drawing library, since MapLibre ships none) that needs confirmation before implementation starts.
+
 ---
 
 ## Phase 3 — Image overlay (the centerpiece)
