@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git restore *)",
+      "Bash(git commit -m ' *)",
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(npx shadcn@latest add tooltip sheet --yes)",
+      "Bash(npx vitest *)",
+      "Bash(npx shadcn@latest add slider toggle --yes)",
+      "Bash(powershell -Command \"Stop-Process -Id 20940 -Force\")",
+      "Bash(curl -s -o /dev/null -w \"port3001=%{http_code}\\\\n\" http://localhost:3001/ --max-time 3)",
+      "Bash(powershell -Command 'Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -ge 3000 -and $_.LocalPort -le 3010} | Select-Object LocalPort,OwningProcess')",
+      "Bash(node verify-phase5.mjs)",
+      "Bash(powershell -Command 'Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -ge 3000 -and $_.LocalPort -le 3005} | Select-Object LocalPort,OwningProcess')",
+      "Bash(curl -s -o /dev/null -w \"port3000=%{http_code}\\\\n\" http://localhost:3000/ --max-time 5)"
+    ]
+  }
+}

@@ -45,6 +45,30 @@ export async function createAnnotation(input: NewAnnotationInput): Promise<Annot
   return annotation;
 }
 
+export async function createAnnotations(inputs: NewAnnotationInput[]): Promise<Annotation[]> {
+  // Validate every input before writing any — atomic all-or-nothing (docs/plans/plan-4.md).
+  for (const input of inputs) {
+    const tool = input.type === "text" ? "point" : input.type;
+    const asFeature = { type: "Feature", geometry: input.geometry, properties: {} };
+    const { valid, reason } = validateDrawnFeature(tool, asFeature);
+    if (!valid) {
+      throw new Error(`createAnnotations: invalid geometry for type "${input.type}" — ${reason}`);
+    }
+  }
+
+  const projectIds = new Set(inputs.map((input) => input.projectId));
+  if (projectIds.size > 1) {
+    throw new Error("createAnnotations: all inputs must belong to the same project");
+  }
+
+  const now = new Date().toISOString();
+  const created = inputs.map((input) => ({ ...input, id: nextId(), createdAt: now, updatedAt: now }));
+  if (created.length > 0) {
+    seedIfNeeded(inputs[0].projectId).push(...created);
+  }
+  return created;
+}
+
 export async function updateAnnotation(
   projectId: string,
   id: string,

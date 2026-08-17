@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   createAnnotation as createAnnotationInStorage,
+  createAnnotations as createAnnotationsInStorage,
   deleteAnnotation as deleteAnnotationInStorage,
   listAnnotations,
   updateAnnotation as updateAnnotationInStorage,
@@ -43,6 +44,15 @@ export function useAnnotations(projectId: string): UseAnnotationsResult {
     [],
   );
 
+  const createAnnotations = useCallback(
+    async (inputs: NewAnnotationInput[]) => {
+      const created = await createAnnotationsInStorage(inputs);
+      setAnnotations((current) => [...current, ...created]);
+      return created;
+    },
+    [],
+  );
+
   const updateAnnotation = useCallback(
     async (id: string, patch: Parameters<UseAnnotationsResult["updateAnnotation"]>[1]) => {
       await updateAnnotationInStorage(projectId, id, patch);
@@ -61,5 +71,5 @@ export function useAnnotations(projectId: string): UseAnnotationsResult {
     [projectId],
   );
 
-  return { annotations, loading, createAnnotation, updateAnnotation, deleteAnnotation };
+  return { annotations, loading, createAnnotation, createAnnotations, updateAnnotation, deleteAnnotation };
 }

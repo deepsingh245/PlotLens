@@ -1,31 +1,37 @@
 "use client";
 
-import { Circle, MapPin, Pentagon, Spline, StickyNote } from "lucide-react";
+import { Circle, ImagePlus, LandPlot, MapPin, Pentagon, Ruler, Spline, StickyNote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { DrawTool } from "@/gis/annotationGeometry";
 
-export type ActiveTool = DrawTool | "text" | null;
+export type MeasureTool = "measure-distance" | "measure-area";
+export type ActiveTool = DrawTool | "text" | "image" | MeasureTool | null;
 
-const TOOLS: { tool: DrawTool | "text"; label: string; shortcut: string; icon: typeof MapPin }[] = [
+const TOOLS: { tool: DrawTool | "text" | "image" | MeasureTool; label: string; shortcut: string; icon: typeof MapPin }[] = [
   { tool: "point", label: "Pin", shortcut: "P", icon: MapPin },
   { tool: "line", label: "Line", shortcut: "L", icon: Spline },
   { tool: "polygon", label: "Polygon", shortcut: "G", icon: Pentagon },
   { tool: "circle", label: "Circle", shortcut: "C", icon: Circle },
   { tool: "text", label: "Note", shortcut: "N", icon: StickyNote },
+  { tool: "image", label: "Image overlay", shortcut: "I", icon: ImagePlus },
+  { tool: "measure-distance", label: "Measure distance", shortcut: "M", icon: Ruler },
+  { tool: "measure-area", label: "Measure area", shortcut: "A", icon: LandPlot },
 ];
 
 /**
  * Right-side tool rail, exactly 34px wide — see docs/design/DESIGN_SYSTEM.md
  * §Validated layout dimensions. Dumb/presentational — driven by activeTool/
- * onSelectTool props, doesn't own DrawingManager itself (see ProjectWorkspace.tsx).
+ * onSelectTool props, doesn't own DrawingManager/OverlayManager itself (see
+ * ProjectWorkspace.tsx). "image" never shows the active state (data-active) —
+ * it's a one-shot action (opens a file-picker dialog), not a persistent mode.
  */
 export function ToolRail({
   activeTool,
   onSelectTool,
 }: {
   activeTool: ActiveTool;
-  onSelectTool: (tool: DrawTool | "text") => void;
+  onSelectTool: (tool: DrawTool | "text" | "image" | MeasureTool) => void;
 }) {
   return (
     <div

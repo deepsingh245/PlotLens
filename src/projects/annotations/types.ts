@@ -23,6 +23,7 @@ export interface UseAnnotationsResult {
   annotations: Annotation[];
   loading: boolean;
   createAnnotation: (input: NewAnnotationInput) => Promise<Annotation>;
+  createAnnotations: (inputs: NewAnnotationInput[]) => Promise<Annotation[]>;
   updateAnnotation: (
     id: string,
     patch: Partial<Pick<Annotation, "title" | "description" | "tags" | "geometry">>,

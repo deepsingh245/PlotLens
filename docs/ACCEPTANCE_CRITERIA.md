@@ -42,6 +42,12 @@ See [GIS_ARCHITECTURE.md](GIS_ARCHITECTURE.md) for how corner coordinates are re
 
 **Given** two points or a drawn polygon, **when** the user requests distance/area, **then** the calculated value matches an independently-verified reference calculation (Turf.js output cross-checked against a known test fixture), not just "a number appears."
 
+## Saved views + investigation timeline
+
+**Given** an open project, **when** the user saves the current view, **then** its map state (center/zoom/bearing/pitch) and selected feature are captured under a name, appear in a list of saved views, and restore the map to that exact state when reopened later.
+
+**Given** an ongoing investigation, **when** an annotation is created, an overlay is added, or a measurement is taken, **then** a corresponding entry appears in the project's investigation timeline in the order it happened, without the user having to log it manually — see [DATA_MODEL.md](DATA_MODEL.md) `InvestigationEvent`.
+
 ## Security acceptance criteria (apply across all features)
 
 - User A can never read, edit, or delete User B's project, layer, overlay, or attachment (IDOR check — see [SECURITY_TEST_PLAN.md](SECURITY_TEST_PLAN.md)).

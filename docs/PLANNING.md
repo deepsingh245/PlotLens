@@ -115,6 +115,8 @@ Full rationale and component/spacing/radius tokens: [design/DESIGN_SYSTEM.md](de
 
 **Exit criteria:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) §Image overlay.
 
+**Detailed task plan:** [plans/plan-3.md](plans/plan-3.md). **Status: drafted, not started.** Flags a real technical constraint discovered during planning: MapLibre's raster paint properties have no blend-mode option, so blend mode (Multiply/Screen) needs a custom WebGL layer and is sequenced after the core four-corner/opacity/lock workflow, not alongside it — see that file.
+
 ---
 
 ## Phase 4 — Data import/export
@@ -132,6 +134,8 @@ Full rationale and component/spacing/radius tokens: [design/DESIGN_SYSTEM.md](de
 **Component library map:** ReUI `FileUpload` + progress state.
 
 **Exit criteria:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) §GeoJSON import/export.
+
+**Detailed task plan:** [plans/plan-4.md](plans/plan-4.md). **Status: drafted, not started.** Resolves that this needs no new server route (client-side parsing, reusing Phase 2's `annotationGeometry.ts` validation) and no new npm dependency.
 
 ---
 
@@ -153,6 +157,8 @@ Full rationale and component/spacing/radius tokens: [design/DESIGN_SYSTEM.md](de
 
 **Exit criteria:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) §Layer manager.
 
+**Detailed task plan:** [plans/plan-5.md](plans/plan-5.md). **Status: drafted, not started.** Surfaces a real blocker rather than solving around it: no satellite (or other second base-map) provider is verified in [DATA_SOURCES.md](DATA_SOURCES.md) yet, so a functioning Streets/Satellite toggle can't be built this phase — Track A scopes down to the panel shell plus Streets as the sole real option and a disabled, explained Satellite placeholder.
+
 ---
 
 ## Phase 6 — Government GIS
@@ -173,6 +179,8 @@ Full rationale and component/spacing/radius tokens: [design/DESIGN_SYSTEM.md](de
 
 **Exit criteria:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) §Government layer.
 
+**Detailed task plan:** [plans/plan-6.md](plans/plan-6.md). **Status: drafted best-effort, hard gate not cleared.** Written at the user's explicit request despite the hard gate above still being open — every Bhuvan-specific technical detail in it (endpoint, layer names, CRS) is an unverified placeholder, clearly marked, not a real value. It documents the architecture (provider contract, `LayerManager`, domain types — all already real/designed elsewhere) and the exact verification checklist from [DATA_SOURCES.md](DATA_SOURCES.md), but implementation still cannot start until that checklist is actually completed by a human.
+
 ---
 
 ## Phase 7 — Spatial analysis (measurements)
@@ -190,6 +198,8 @@ Full rationale and component/spacing/radius tokens: [design/DESIGN_SYSTEM.md](de
 **Component library map:** the floating label is a small custom component (no dialog/modal primitive needed) — optionally built on a coss.com/ui `Toolbar` shell for consistent positioning logic with the Phase 3 overlay control bar.
 
 **Exit criteria:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) §Measurements.
+
+**Detailed task plan:** [plans/plan-7.md](plans/plan-7.md). **Status: Track A built.** Distance + area only this pass (buffer/nearest/intersection/road-impact deferred, see that file); reuses `DrawingManager`'s existing line/polygon modes rather than a second Terra Draw instance, via a new `draft` event exposing live in-progress geometry. Automated checks (tsc/lint/tests/build) pass; interactive verification not yet done.
 
 ---
 

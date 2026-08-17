@@ -33,6 +33,8 @@ export interface DrawingManagerEventMap {
   create: (payload: { tool: DrawTool; id: FeatureId; rawFeature: unknown }) => void;
   /** An existing feature's geometry was edited (vertex drag / scale) via select-mode editing. */
   update: (payload: { id: FeatureId; rawFeature: unknown }) => void;
+  /** Fires on every vertex added while a feature is still being drawn (pre-finish) — see start(). */
+  draft: (payload: { tool: DrawTool; rawFeature: unknown }) => void;
   select: (payload: { id: FeatureId }) => void;
   deselect: () => void;
 }
@@ -48,12 +50,16 @@ export class DrawingManager {
   private listeners: { [K in keyof DrawingManagerEventMap]: Set<DrawingManagerEventMap[K]> } = {
     create: new Set(),
     update: new Set(),
+    draft: new Set(),
     select: new Set(),
     deselect: new Set(),
   };
   /** Ids Terra Draw has already told us about via `finish` — used to tell a genuinely
    *  new `change` event apart from an edit to something already created/loaded. */
   private knownIds = new Set<FeatureId>();
+  /** Set by start(), cleared by stop() — lets handleChange forward pre-finish
+   *  vertex updates as `draft` events without change events exposing the mode. */
+  private activeDraftTool: DrawTool | null = null;
 
   constructor(map: MapLibreMap) {
     this.map = map;
@@ -95,12 +101,14 @@ export class DrawingManager {
 
   /** Begins drawing a new feature of the given tool. Call stop() to return to select mode. */
   start(tool: DrawTool): void {
+    this.activeDraftTool = tool;
     this.terraDraw.setMode(TERRA_DRAW_MODE[tool]);
     this.map.getCanvas().style.cursor = "crosshair";
   }
 
   /** Returns to select mode — existing features stay visible/clickable, never fully "off". */
   stop(): void {
+    this.activeDraftTool = null;
     this.terraDraw.setMode(SELECT_MODE);
     this.map.getCanvas().style.cursor = "";
   }
@@ -147,15 +155,23 @@ export class DrawingManager {
     for (const callback of this.listeners.create) callback({ tool, id, rawFeature });
   };
 
-  /** `change` fires for in-progress drawing too — only forward edits to features we already
-   *  know about (post-finish or pre-loaded) as our own `update` event. */
+  /** `change` fires for in-progress drawing too. Ids we already know about (post-finish or
+   *  pre-loaded) forward as our own `update` event; ids we don't know about yet are the
+   *  feature currently being drawn (pre-finish) and forward as `draft` instead, so callers
+   *  like live measurement can react to every vertex without waiting for `create`. */
   private handleChange = (ids: (string | number)[], type: string): void => {
-    if (type !== "update") return;
+    if (type !== "update" && type !== "create") return;
     for (const id of ids) {
-      if (!this.knownIds.has(id)) continue;
       const rawFeature = this.terraDraw.getSnapshotFeature(id);
       if (!rawFeature) continue;
-      for (const callback of this.listeners.update) callback({ id, rawFeature });
+
+      if (this.knownIds.has(id)) {
+        if (type === "update") {
+          for (const callback of this.listeners.update) callback({ id, rawFeature });
+        }
+      } else if (this.activeDraftTool) {
+        for (const callback of this.listeners.draft) callback({ tool: this.activeDraftTool, rawFeature });
+      }
     }
   };
 

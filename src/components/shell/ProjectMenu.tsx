@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,23 +9,64 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ImportGeoJsonDialog } from "@/components/projects/ImportGeoJsonDialog";
+import { exportAnnotationsToGeoJson } from "@/gis/geojsonImportExport";
+import type { Annotation, NewAnnotationInput } from "@/projects/annotations/types";
 
 /**
  * Track A: "Delete Project" is a no-op stub. Track B wires it to a real
  * deleteDoc() call with a confirmation step — see docs/plans/plan-1.md
  * (hard delete, not archivedAt) and docs/DATA_RETENTION.md.
  */
-export function ProjectMenu() {
+export function ProjectMenu({
+  annotations,
+  projectName,
+  onImportGeoJson,
+}: {
+  annotations: Annotation[];
+  projectName: string;
+  onImportGeoJson: (inputs: Omit<NewAnnotationInput, "projectId">[]) => Promise<void>;
+}) {
+  const [importOpen, setImportOpen] = useState(false);
+
+  function handleExport() {
+    const json = exportAnnotationsToGeoJson(annotations);
+    const blob = new Blob([json], { type: "application/geo+json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${projectName}.geojson`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Project menu" />}>
-        <MoreHorizontal className="size-4" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem variant="destructive" disabled>
-          Delete Project
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" aria-label="Project menu" />}>
+          <MoreHorizontal className="size-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setImportOpen(true)}>Import GeoJSON…</DropdownMenuItem>
+          <Tooltip>
+            <TooltipTrigger
+              render={<DropdownMenuItem disabled={annotations.length === 0} onClick={handleExport} />}
+            >
+              Export GeoJSON
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              {annotations.length === 0 ? "Add an annotation before exporting" : "Download this project's annotations as GeoJSON"}
+            </TooltipContent>
+          </Tooltip>
+          <DropdownMenuItem variant="destructive" disabled>
+            Delete Project
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <ImportGeoJsonDialog open={importOpen} onOpenChange={setImportOpen} onImport={onImportGeoJson} />
+    </>
   );
 }

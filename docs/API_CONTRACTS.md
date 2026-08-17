@@ -26,12 +26,17 @@ POST   /api/overlays
 PATCH  /api/overlays/:id
 DELETE /api/overlays/:id
 
-POST   /api/import/geojson
-GET    /api/export/geojson/:projectId
-
 GET    /api/providers
 GET    /api/providers/:id/layers
 ```
+
+**GeoJSON import/export is client-side only — no server route.** Parsing/serialization
+happens entirely in the browser (`src/gis/geojsonImportExport.ts`); import writes through
+the existing `createAnnotation`/`createAnnotations` path (Firestore Security Rules enforce
+ownership once Track B lands), and export is a client-side `Blob` + `<a download>`. A
+`POST /api/import/geojson` and `GET /api/export/geojson/:projectId` were sketched here
+originally but are intentionally **not built** — see [plans/plan-4.md](plans/plan-4.md) for
+the full rationale.
 
 ## Rules for every endpoint added here
 
