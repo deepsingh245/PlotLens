@@ -81,7 +81,7 @@ export function ProjectWorkspace({ project }: { project: Project }) {
   const drawingManager = useDrawingManager(engine);
   const { annotations, loading: annotationsLoading, createAnnotation, createAnnotations, updateAnnotation, deleteAnnotation } =
     useAnnotations(project.id);
-  const { overlays, createOverlay, updateOverlay, deleteOverlay } = useOverlays(project.id);
+  const { overlays, loading: overlaysLoading, createOverlay, updateOverlay, deleteOverlay } = useOverlays(project.id);
   const { savedViews, createSavedView, deleteSavedView } = useSavedViews(project.id);
   const { events, createEvent } = useInvestigationEvents(project.id);
 
@@ -194,15 +194,19 @@ export function ProjectWorkspace({ project }: { project: Project }) {
     for (const annotation of annotations) seedAnnotationOnMap(annotation);
   }, [drawingManager, engine, annotationsLoading, annotations, seedAnnotationOnMap]);
 
-  // Seed already-persisted overlays into OverlayManager once, mirroring the annotation seed above.
+  // Seed already-persisted overlays into OverlayManager once, mirroring the annotation seed
+  // above — same fix, same reason: gating on `overlays.length === 0` instead of the hook's
+  // real `loading` flag meant a brand-new project (zero overlays) never flipped the ref, so
+  // the first overlay ever added (already added directly by AddOverlayDialog's onConfirm)
+  // got re-added here too — a duplicate addSource() call MapLibre throws on.
   useEffect(() => {
-    if (!overlayManager || seededOverlaysRef.current || overlays.length === 0) return;
+    if (!overlayManager || overlaysLoading || seededOverlaysRef.current) return;
     seededOverlaysRef.current = true;
 
     for (const overlay of overlays) {
       overlayManager.add(overlay.id, overlay.imageUrl, overlay.coordinates, overlay.opacity, overlay.visible);
     }
-  }, [overlayManager, overlays]);
+  }, [overlayManager, overlaysLoading, overlays]);
 
   useEffect(() => {
     if (!drawingManager) return;
@@ -244,6 +248,12 @@ export function ProjectWorkspace({ project }: { project: Project }) {
         });
         drawingManager.removeFeature(id);
         drawingManager.addExistingFeature(tool, created.id, geometry);
+        // Open its panel immediately, same as the text tool already does — otherwise a
+        // freshly-drawn pin/line/polygon/circle gives no visible confirmation at all that
+        // anything happened (Terra Draw's own render of a new shape is easy to miss against
+        // a busy basemap), which reads as "the tool doesn't work."
+        selectAnnotation(created.id);
+        setJustCreatedId(created.id);
         createEvent({
           projectId: project.id,
           type: "annotation_created",

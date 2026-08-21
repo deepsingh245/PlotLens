@@ -2,6 +2,37 @@
 
 All notable changes to PlotLens are recorded here. Format loosely follows Keep a Changelog; dates are `YYYY-MM-DD`.
 
+## 2026-08-18 — Interactive bug-fixing pass (map rendering, overlays, drawing tools)
+
+Real-usage bugs found and fixed while running the app directly, across several back-to-back turns not previously written up here.
+
+### Fixed
+
+- **The Phase 2 map-sizing bug, root cause found and fixed.** `MapCanvas.tsx`'s container used a Tailwind `absolute` class, but MapLibre itself adds a `maplibregl-map` class to that exact element, and `maplibre-gl.css`'s same-specificity `.maplibregl-map { position: relative }` rule won the cascade tie depending on stylesheet load order — silently canceling the `absolute` positioning `inset-0` depended on. `clientHeight` was therefore genuinely `0` at all times, not a one-off race, so no `ResizeObserver` could ever have fixed it. Fixed by setting `position: absolute` via an inline `style` instead of a class — inline styles always outrank class-selector rules in the cascade. Verified via DOM inspection and a screenshot showing real OpenStreetMap tiles rendering for the first time. See `docs/plans/plan-2.md`'s 2026-08-18 update.
+- **`src/map/osmStyle.ts`: added `maxzoom: 19`** to the OSM raster source. Without it, zooming in past OSM's actual tile availability (e.g. z22) produced a `400` response with no CORS header, which browsers misreport as a CORS error rather than "zoomed in too far." MapLibre now oversamples the z19 tile instead of requesting tiles that don't exist.
+- **Duplicate `addSource` crash on the first image overlay of a new project.** `ProjectWorkspace.tsx`'s overlay-seeding effect had the exact same latent bug already found and fixed for annotations in Phase 4 — gated on `overlays.length === 0` instead of `useOverlays`' real `loading` flag, so it never seeded on an empty project and then double-added the very first overlay (already added directly by `AddOverlayDialog`'s `onConfirm`) the moment `overlays` went from 0 to 1. Fixed the same way: gate on `loading`.
+- **Drawing tools (Pin/Line/Polygon/Circle) gave no feedback after finishing a shape**, unlike the Note tool which always opened its panel — easy to mistake for "the tool doesn't work," especially since a freshly-drawn point is easy to miss against a busy OSM basemap. Confirmed via headless-browser testing (and the auto-logged investigation timeline) that the underlying create/persist pipeline was working correctly the whole time; the fix was UX-only: every drawn shape now calls `selectAnnotation`/opens its panel immediately, same as Note already did.
+- **Circle's default draw interaction was click-move-click only** (`TerraDrawCircleMode`'s default `drawInteraction: "click-move"`) — clicking and dragging, the far more instinctive gesture, silently did nothing. Set `drawInteraction: "click-move-or-drag"` so both gestures work.
+
+### Status
+
+All four fixes verified via headless-Chromium (real DOM/console inspection, not just automated checks) plus `tsc`/`lint`/`vitest` (80/80)/`build`, each time before moving to the next. `docs/plans/plan-2.md`, `plan-3.md`, `plan-4.md`, and `docs/plans/README.md` updated to stop describing the map-sizing bug as still-present.
+
+## 2026-08-17 (last of all) — Phase 8 (Saved views + investigation timeline) Track A
+
+### Added
+
+- `docs/ACCEPTANCE_CRITERIA.md`: new §Saved views + investigation timeline entry — required before this phase could start, per `docs/PLANNING.md`'s own note that it didn't exist yet.
+- `src/map/MapEngine.ts`: `flyTo()` widened to accept bearing/pitch; new `getViewState()`.
+- `src/projects/savedViews/` + `src/storage/savedViews.ts`, `src/projects/investigationEvents/` + `src/storage/investigationEvents.ts` — Track A mock persistence, mirroring the existing annotations/overlays pattern.
+- `src/components/timeline/HistoryPanel.tsx` + `SaveViewDialog.tsx`: one slide-over panel for saved views (create/restore/delete) and an append-only investigation timeline (auto-logged on annotation creation, overlay creation, and measurement-taken; manual notes supported).
+- `TopBar.tsx`: new History button. `ProjectWorkspace.tsx`: wired both hooks and four auto-logging call sites.
+- `docs/plans/plan-8.md`: full record, including a `measurementResultRef` fix for a stale-closure risk in the measurement-logging call site.
+
+### Status
+
+Build/lint/tsc/tests all pass (80 tests, unchanged — no new pure-logic unit tests needed for CRUD plumbing, matching precedent). **Interactive verification not yet done this session** — deferred at the user's explicit request to keep this pass code-only. With this phase built, every phase through 8 is at least Track-A-buildable except Phase 6 (hard-gated on unverified Bhuvan details) and whatever Track B needs a real Firebase project.
+
 ## 2026-08-17 (last) — Phase 7 (Spatial analysis) Track A: distance + area
 
 ### Added

@@ -217,7 +217,9 @@ Full rationale and component/spacing/radius tokens: [design/DESIGN_SYSTEM.md](de
 
 **Component library map:** ReUI `Timeline`/`Stepper` component for the investigation history list; ReUI `Card` for a saved-view thumbnail/entry.
 
-**Exit criteria:** add a §Saved views entry to [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) before this phase starts — it doesn't have one yet.
+**Exit criteria:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) §Saved views + investigation timeline (added alongside this phase's implementation).
+
+**Detailed task plan:** [plans/plan-8.md](plans/plan-8.md). **Status: Track A built.** `SavedView` create/restore/delete + auto-logged `InvestigationEvent` timeline (annotation/overlay/measurement creation), via one slide-over `HistoryPanel`. Automated checks pass; interactive verification not yet done.
 
 ---
 

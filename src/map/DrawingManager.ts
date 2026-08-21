@@ -70,7 +70,10 @@ export class DrawingManager {
         new TerraDrawPointMode(),
         new TerraDrawLineStringMode(),
         new TerraDrawPolygonMode(),
-        new TerraDrawCircleMode(),
+        // Default drawInteraction is "click-move" (click center, move, click again to set
+        // radius) — most users instinctively try to click-and-drag instead, which silently
+        // does nothing under that default. "click-move-or-drag" accepts either gesture.
+        new TerraDrawCircleMode({ drawInteraction: "click-move-or-drag" }),
         new TerraDrawSelectMode({
           flags: {
             point: { feature: { draggable: true } },

@@ -18,6 +18,12 @@ export const osmStyle: StyleSpecification = {
       type: "raster",
       tiles: [OSM_TILE_URL],
       tileSize: 256,
+      // tile.openstreetmap.org's standard raster tiles stop at z19 — without this,
+      // MapLibre keeps requesting tiles past that (e.g. z22), which the server
+      // rejects with a 400 that has no CORS header, surfacing in devtools as a
+      // misleading "CORS policy" error rather than the real "zoomed in too far"
+      // cause. Capping here makes MapLibre oversample the z19 tile instead.
+      maxzoom: 19,
       attribution: OSM_ATTRIBUTION,
     },
   },

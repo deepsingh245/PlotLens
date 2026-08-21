@@ -47,3 +47,6 @@ Thumbs.db
 *.shx
 *.dbf
 /data/raw/
+
+# Graphify code graph — regenerated locally, not project source
+graphify-out/
