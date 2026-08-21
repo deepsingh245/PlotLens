@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -13,26 +14,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LocationSearch } from "@/components/search/LocationSearch";
+import { toGeoJsonPosition } from "@/gis/coordinates";
+import { useAuth } from "@/lib/auth/AuthProvider";
 import type { GeocodeResult } from "@/app/api/geocode/route";
+import type { NewProjectInput, Project } from "@/projects/types";
 
-/**
- * Track A: submit is stubbed (no Firestore yet). Track B replaces onCreate
- * with a real createProject() call — see docs/plans/plan-1.md. The chosen
- * location resolves Project.map.center; no separate place-name field exists
- * on the Project schema (docs/DATA_MODEL.md is frozen shape).
- */
-export function NewProjectDialog() {
+export function NewProjectDialog({
+  onCreate,
+}: {
+  onCreate: (input: NewProjectInput) => Promise<Project>;
+}) {
+  const { user } = useAuth();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [location, setLocation] = useState<GeocodeResult | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    // TODO(Track B): call createProject({ name, ownerId, map: { center: toGeoJsonPosition(location.lngLat), ... } })
-    // then router.push to the new project.
-    setOpen(false);
-    setName("");
-    setLocation(null);
+    if (!user || !location) return;
+
+    setSubmitting(true);
+    try {
+      const created = await onCreate({
+        ownerId: user.uid,
+        name,
+        ...(description ? { description } : {}),
+        map: { center: toGeoJsonPosition(location.lngLat), zoom: 14, bearing: 0, pitch: 0 },
+      });
+      setOpen(false);
+      setName("");
+      setDescription("");
+      setLocation(null);
+      router.push(`/projects/${created.id}`);
+    } catch (error) {
+      console.error("Failed to create project:", error);
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -60,12 +80,17 @@ export function NewProjectDialog() {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="project-description">Description (optional)</Label>
-              <Input id="project-description" placeholder="What are you investigating?" />
+              <Input
+                id="project-description"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="What are you investigating?"
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={!name || !location}>
-              Create Project
+            <Button type="submit" disabled={!name || !location || submitting}>
+              {submitting ? "Creating…" : "Create Project"}
             </Button>
           </DialogFooter>
         </form>

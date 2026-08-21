@@ -75,7 +75,7 @@ Full rationale and component/spacing/radius tokens: [design/DESIGN_SYSTEM.md](de
 
 **Exit criteria:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) §Project system.
 
-**Detailed task plan:** [plans/plan-1.md](plans/plan-1.md). **Status: Track A complete, Track B blocked** on the user creating a real Firebase project — see that file's "Open questions / blockers".
+**Detailed task plan:** [plans/plan-1.md](plans/plan-1.md). **Status: Track A and Track B built** (Firebase Auth + real Project CRUD + map-state persistence) — interactive verification and the user's console setup (Auth enabled, `.env.local` populated) are the remaining steps; see that file's "Open questions / blockers".
 
 ---
 
@@ -248,5 +248,5 @@ This is the same information as [design/UX_SPECIFICATION.md](design/UX_SPECIFICA
 
 - Location-search/geocoding provider for Phase 1 — not yet in [DATA_SOURCES.md](DATA_SOURCES.md).
 - Bhuvan (and every other government provider) endpoint/license verification — blocks all of Phase 6.
-- Firebase project creation and `.env.local` values — see [README.md](../README.md) §Contributing; deferred until Phase 0 actually starts.
+- Firebase console setup (Email/Password Auth enabled, Web App registered) and `.env.local` values — project itself is created; see [README.md](../README.md) §Contributing.
 - Whether a PWA/installable mobile experience is wanted — not committed, mentioned only as a possible future nicety above.

@@ -2,6 +2,30 @@
 
 All notable changes to PlotLens are recorded here. Format loosely follows Keep a Changelog; dates are `YYYY-MM-DD`.
 
+## 2026-08-22 — Phase 1 Track B: real Firebase Auth + Project persistence
+
+### Added
+
+- `src/lib/firebaseClient.ts`: Firebase client SDK bootstrap (`firebase` v12, modular API) — no `firebase-admin` usage, matching `docs/ARCHITECTURE.md`/`docs/ADR/0002-storage.md`. Connects the Firestore/Auth emulators automatically when `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true` (new `.env.example` key), guarded against Next.js Fast Refresh double-connecting.
+- `src/lib/auth/AuthProvider.tsx` + `AuthGate.tsx`: single-owner email/password Auth context and route gate (redirects signed-out visitors to `/login`, signed-in visitors away from it). No signup UI — the one account is created via the Firebase console or the Emulator UI, not through this app; this was a real design gap in `plan-1.md` (it committed to "email/password, single owner" but never specified a sign-in surface, and putting a password in `NEXT_PUBLIC_*` env would leak it into the browser bundle).
+- `src/app/login/page.tsx` (→ `src/components/auth/LoginForm.tsx`): minimal sign-in form.
+- `src/storage/projects.ts`: real Firestore CRUD (`listProjects`/`subscribeToProjects`/`getProject`/`subscribeToProject`/`createProject`/`updateProjectMap`/`deleteProject`) against `projects/{projectId}`, matching every other `storage/*.ts` module's established Track A→B contract. No `renameProject` — no UI calls for it. `layers`/`overlays`/`annotations`/`savedViews` are written empty at create and intentionally not kept in sync afterward (see `docs/DATA_MODEL.md`'s new note).
+- `src/projects/useProjects.ts` + `useProject.ts`: live `onSnapshot`-backed hooks, `{ data, loading, ...actions }` shape.
+- `src/projects/maps/useMapStatePersistence.ts`: debounced (~800ms) move-end → real `Project.map` write, deriving the `SaveStatus` now actually fed into `SaveStatusIndicator` (previously always `"idle"`, unwired). This was greenfield — Track A only ever built the raw `MapEngine.onMoveEnd` subscription primitive and `toProjectMapState`, never the debounce/write/status logic itself.
+- `src/components/shell/DeleteProjectDialog.tsx`: confirmation dialog for "Delete Project", mirroring the existing annotation/overlay delete-dialog pattern. Hard delete, not `archivedAt`.
+
+### Changed
+
+- `src/app/page.tsx`, `src/app/login/page.tsx`, `src/app/projects/[id]/page.tsx`: split into thin `force-dynamic` Server Component wrappers (`ProjectsView`/`LoginForm`/`ProjectWorkspaceLoader` do the actual client-side work) — a plain `"use client"` page can't export route-segment config, and without `force-dynamic` these auth-dependent pages fail `next build`'s static prerendering pass whenever `.env.local` isn't populated with a real (or at least well-formed) Firebase API key. Verified the failure is specifically about key *format*, not architecture, by building once with a syntactically-valid placeholder config.
+- `NewProjectDialog.tsx`: `handleSubmit` now calls a real `createProject()` and `router.push`s to the new project; the previously-dead `description` field is wired into state.
+- `ProjectMenu.tsx`/`TopBar.tsx`: "Delete Project" now calls a real `deleteProject()` behind `DeleteProjectDialog`.
+- `ProjectWorkspace.tsx`: mounts `useMapStatePersistence`, passes its status into `TopBar`.
+- Deleted `src/projects/mockProjects.ts` (no longer imported anywhere).
+
+### Status
+
+`tsc`/`lint`/`vitest` (80/80, unchanged — no new pure logic needing unit tests, matching precedent) clean; `next build` succeeds once `.env.local` has a well-formed Firebase config. **Interactive verification not yet done** — the user still needs to enable Email/Password Auth and populate `.env.local` in the Firebase console before that can happen; see `docs/plans/plan-1.md` "Open questions / blockers". Phases 2/3/7/8 Track B (annotations, overlays + Storage, saved views, investigation events) follow the identical pattern and are deliberately not bundled into this pass.
+
 ## 2026-08-18 — Interactive bug-fixing pass (map rendering, overlays, drawing tools)
 
 Real-usage bugs found and fixed while running the app directly, across several back-to-back turns not previously written up here.

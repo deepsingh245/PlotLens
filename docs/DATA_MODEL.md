@@ -32,6 +32,8 @@ Project
 }
 ```
 
+`layers`/`overlays`/`annotations`/`savedViews` are written empty at `create` time (required by `firestore.rules`) and are **not** kept in sync afterward — the real source of truth for "does this project have annotations/overlays/etc." is each entity's own subcollection query (`src/storage/*.ts`), not these arrays. Don't add code that reads them expecting a live ID list.
+
 ## Annotation (marker / line / polygon / circle / text)
 
 ```text

@@ -17,6 +17,7 @@ export function TopBar({
   annotations,
   onImportGeoJson,
   onOpenHistory,
+  onDeleteProject,
 }: {
   projectName: string;
   saveStatus?: SaveStatus;
@@ -24,6 +25,7 @@ export function TopBar({
   annotations: Annotation[];
   onImportGeoJson: (inputs: Omit<NewAnnotationInput, "projectId">[]) => Promise<void>;
   onOpenHistory: () => void;
+  onDeleteProject: () => void;
 }) {
   return (
     <div
@@ -41,7 +43,12 @@ export function TopBar({
       <Button variant="ghost" size="icon-sm" aria-label="History" onClick={onOpenHistory}>
         <History className="size-4" />
       </Button>
-      <ProjectMenu annotations={annotations} projectName={projectName} onImportGeoJson={onImportGeoJson} />
+      <ProjectMenu
+        annotations={annotations}
+        projectName={projectName}
+        onImportGeoJson={onImportGeoJson}
+        onDeleteProject={onDeleteProject}
+      />
     </div>
   );
 }

@@ -1,15 +1,10 @@
-import { ProjectList } from "@/components/projects/ProjectList";
-import { NewProjectDialog } from "@/components/projects/NewProjectDialog";
-import { mockProjects } from "@/projects/mockProjects";
+import { ProjectsView } from "@/components/projects/ProjectsView";
+
+// This page is behind AuthGate and depends on the Firebase client SDK
+// (useProjects), which can't be statically prerendered without real
+// .env.local credentials at build time — force-dynamic skips that.
+export const dynamic = "force-dynamic";
 
 export default function ProjectsPage() {
-  return (
-    <div className="flex flex-1 flex-col gap-6 p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-text-primary text-lg font-semibold">PlotLens</h1>
-        <NewProjectDialog />
-      </div>
-      <ProjectList projects={mockProjects} />
-    </div>
-  );
+  return <ProjectsView />;
 }

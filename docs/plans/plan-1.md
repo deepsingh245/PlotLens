@@ -1,6 +1,6 @@
 # Plan 1 — Phase 1: Core Map
 
-**Status:** Track A complete (2026-08-10) — Phase 0 scaffolding, GIS helpers, MapEngine/MapCanvas, static shell UI, Nominatim search, and Firestore rules + Emulator tests are all built and passing. **Track B is blocked** on the user creating a real Firebase project and filling in `.env.local` — see Task 1 and "Open questions / blockers" below. See [../PLANNING.md](../PLANNING.md) Phase 0.
+**Status:** Track A complete (2026-08-10). **Track B built (2026-08-22)** — Firebase client bootstrap, single-owner email/password Auth (`AuthProvider`/`AuthGate`/`/login`), real `Project` CRUD (`src/storage/projects.ts`), `useProjects`/`useProject`, and debounced map-state persistence (`useMapStatePersistence`, driving `SaveStatusIndicator`) are all built — `tsc`/`lint`/`vitest` (80/80) clean, build succeeds once `.env.local` is populated. **Interactive verification (against the Emulator, then the real project) is the user's remaining step** — see "Open questions / blockers" below; this file's own bar for "done" isn't met until that happens. See [../PLANNING.md](../PLANNING.md) Phase 0.
 
 **Implementation notes (read before continuing Track B):**
 - ReUI's hosted registry paywalled a basic `card` component on first request (license-key required even for what appeared to be a free-tier primitive). Rather than guess which slugs are actually free, Task 6's components were pulled from the **default shadcn registry** instead (`npx shadcn@latest add card dialog input dropdown-menu label`), which already uses the `base-nova` style/preset ReUI itself builds on. This satisfies ADR-0005's intent (accessible, themeable, non-decorative primitives) without the paywall friction — re-evaluate pulling a specific ReUI-hosted component later if a genuinely ReUI-specific enhancement is needed.
@@ -23,21 +23,20 @@ By the end of this phase: the app boots to a map, the user can create/name/save/
 ## Task breakdown
 
 ### 1. Firebase project setup
-- [ ] Create the Firebase project (console) — see [../../README.md](../../README.md) §Contributing; this was previously deferred, do it now if not already done. **Blocking Track B — user action required, cannot be done by the AI.**
-- [ ] Enable Firestore and Firebase Auth (email/password — confirmed choice, simplest console setup for a single owner).
-- [ ] Populate `.env.local` from [../../.env.example](../../.env.example) with real Firebase config values. Never commit this file — see [../SECURITY.md](../SECURITY.md) §Secrets.
-- [x] Install and configure the Firebase Emulator Suite for local Firestore/Auth testing — see [../SECURITY.md](../SECURITY.md) §Firebase security rules. Done via `firebase-tools` + `@firebase/rules-unit-testing`, runs against the fake `demo-plotlens` project ID (no real Firebase project needed for this part).
+- [x] Create the Firebase project (console) — done by the user (2026-08-22).
+- [ ] Enable Firestore and Firebase Auth (email/password), register a Web App, and populate `.env.local` from [../../.env.example](../../.env.example) with real Firebase config values (five `NEXT_PUBLIC_FIREBASE_*` keys — the doc previously said six, corrected; `messagingSenderId` isn't needed since this app doesn't use FCM). **User action, in progress** — never commit this file, see [../SECURITY.md](../SECURITY.md) §Secrets.
+- [x] Install and configure the Firebase Emulator Suite for local Firestore/Auth testing — see [../SECURITY.md](../SECURITY.md) §Firebase security rules. Done via `firebase-tools` + `@firebase/rules-unit-testing`, runs against the fake `demo-plotlens` project ID (no real Firebase project needed for this part). `src/lib/firebaseClient.ts` now also connects to it automatically when `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true` is set.
 
 ### 2. Firestore data layer
 - [x] `Project` schema types (`src/projects/types.ts`, `src/projects/maps/types.ts`) match [../DATA_MODEL.md](../DATA_MODEL.md).
 - [x] `firestore.rules` written: deny-by-default, owner-only read/write, `ownerId` immutable on update, zoom clamped 0–22, create rejects non-empty `layers`/`overlays`/`annotations`/`savedViews` — see [../SECURITY.md](../SECURITY.md) §Firebase security rules.
 - [x] Emulator-based rule tests written and passing (`tests/integration/firestore-rules.test.ts`, run via `npm run test:rules`): unauthenticated denied, owner CRUD succeeds, full cross-user IDOR matrix denied (read/update/delete) — see [../SECURITY_TEST_PLAN.md](../SECURITY_TEST_PLAN.md).
-- [ ] **Blocked on Task 1 (Track B):** real CRUD functions (`src/storage/projects.ts`) — create, rename, update `map` state, archive/delete, list-by-owner — against a live Firestore instance.
+- [x] Real CRUD functions (`src/storage/projects.ts`) — create, update `map` state, hard delete, list-by-owner/get-by-id (both as one-shot reads and live `onSnapshot` subscriptions) — against a live Firestore instance. No `renameProject`: no UI anywhere calls for renaming an existing project (only naming at creation), so it wasn't built — add it if a rename affordance is ever designed. The `layers`/`overlays`/`annotations`/`savedViews` arrays are written empty at create (required by `firestore.rules`) and are **not** kept in sync afterward — see [../DATA_MODEL.md](../DATA_MODEL.md)'s note.
 
 ### 3. Map rendering
 - [x] Vanilla MapLibre GL JS installed and wrapped in `src/map/MapEngine.ts` (vanilla chosen over `react-map-gl` — see [../PLANNING.md](../PLANNING.md) rationale, confirmed correct: v6 has no default export, only named exports).
 - [x] OSM raster tile source wired (`src/map/osmStyle.ts`) — **development-scale usage only**, per [../DATA_SOURCES.md](../DATA_SOURCES.md) OSM entry.
-- [x] `MapCanvas` renders with a hardcoded/prop-passed default center/zoom (Track A — no Firestore-backed persistence yet; `src/gis/mapState.ts`'s `toProjectMapState` and the debounced move-end writer are built but not yet wired to a real write, since that needs Task 1).
+- [x] `MapCanvas` renders with the project's real `map.center`/`map.zoom`. `src/gis/mapState.ts`'s `toProjectMapState` (Track A) plus the new debounced move-end writer (`src/projects/maps/useMapStatePersistence.ts`, Track B — greenfield, not just "wiring up" anything that pre-existed) now write real `Project.map` updates on every pan/zoom, mounted in `ProjectWorkspace.tsx`.
 - [x] `© OpenStreetMap contributors` attribution confirmed visible (MapLibre's built-in attribution control, re-skinned via `src/map/map-controls.css`).
 
 ### 4. Map controls
@@ -53,9 +52,10 @@ By the end of this phase: the app boots to a map, the user can create/name/save/
 
 ### 6. Shell UI
 - [x] `TopBar` at **34px** height ([../design/DESIGN_SYSTEM.md](../design/DESIGN_SYSTEM.md) §Validated layout dimensions): wordmark, project name, search (center), save status indicator, project menu (right).
-- [x] Projects screen (`src/app/page.tsx`): card grid via `ProjectList`/`ProjectCard`, "+ New Map" (`NewProjectDialog`), empty state. Currently backed by `src/projects/mockProjects.ts` (Track A placeholder — delete once Track B's `ProjectsProvider` lands).
-- [x] New Project flow: name + location (via `LocationSearch`) + optional description; submit is stubbed (`TODO(Track B)` in the component) pending Task 1.
-- [x] `SaveStatusIndicator` built as a pure prop-driven component (`idle`/`saving`/`saved`/`error`) — not yet wired to a real write result, since there's no real write yet (Track B).
+- [x] Projects screen (`src/app/page.tsx` → `ProjectsView`): card grid via `ProjectList`/`ProjectCard`, "+ New Map" (`NewProjectDialog`), empty state. Now backed by `useProjects()` (live `onSnapshot`, scoped to the signed-in owner) — `src/projects/mockProjects.ts` deleted.
+- [x] New Project flow: name + location (via `LocationSearch`) + description, all wired to a real `createProject()` call, then `router.push` to the new project.
+- [x] `SaveStatusIndicator` wired to `useMapStatePersistence`'s real status (`saving` → `saved`, auto-resets to `idle`; `error` on failure).
+- [x] Auth: single-owner email/password sign-in (`/login`, `AuthProvider`/`AuthGate` gating the whole app) — not originally itemized as its own task, but required to satisfy "email/password, single owner" without putting a password in browser-exposed env (see [../SECURITY.md](../SECURITY.md) §Secrets). No signup UI — the one account is created via the Firebase console or the Emulator UI, not through this app. "Delete Project" (`ProjectMenu`) now wired to a real `deleteProject()` (hard delete) behind a confirmation dialog, matching the annotation/overlay delete-dialog pattern.
 
 ## Tech stack for this phase
 
@@ -88,15 +88,17 @@ Map is full-screen by default on mobile (`<768px`); search becomes a full-width 
 - [x] Unauthenticated Firestore read on `Project` → denied (Emulator-tested).
 - [x] User A reads/edits/deletes User B's project → denied (Emulator-tested, full IDOR matrix).
 - [x] No `allow read, write: if true` anywhere in `firestore.rules`.
-- [ ] Firebase config values only in `.env.local`, never committed — not yet applicable, no real project/`.env.local` exists yet (Track B).
+- [ ] Firebase config values only in `.env.local`, never committed — code is ready (`.env.local` is gitignored, `firebaseClient.ts` reads only `NEXT_PUBLIC_*`/env vars); pending the user actually populating it.
+- [x] No `firebase-admin`/server-side Firestore access introduced — client SDK only, per [../ARCHITECTURE.md](../ARCHITECTURE.md)/[../ADR/0002-storage.md](../ADR/0002-storage.md).
 
 ## Exit criteria
 
-[../ACCEPTANCE_CRITERIA.md](../ACCEPTANCE_CRITERIA.md) §Project system, in full: create/name/save/reopen/delete works and persists across reload; map center/zoom restores correctly on reopen. **Not yet met** — this requires Track B (real Firestore persistence). Track A gets everything else (UI, map, search, security rules) ready for Track B to plug into.
+[../ACCEPTANCE_CRITERIA.md](../ACCEPTANCE_CRITERIA.md) §Project system, in full: create/name/save/reopen/delete works and persists across reload; map center/zoom restores correctly on reopen. **Code complete, not yet interactively verified** — see "Open questions / blockers" below.
 
 ## Open questions / blockers
 
-- **Firebase project not yet created (Task 1) — blocks all of Track B.** User action required: create a Firebase project, enable Firestore + Email/Password Auth, register a Web App, fill in `.env.local`'s six `NEXT_PUBLIC_FIREBASE_*` values (see [../PLANNING.md](../PLANNING.md) Track B action items). Nothing else in this phase is blocked.
+- **Interactive verification still needed.** Sign in → create a project → confirm it appears on `/` and opens at `/projects/[id]` → pan/zoom, confirm `SaveStatusIndicator` shows `Saving…` → `Saved` → reload and confirm the view restored → rename/delete flows → sign out redirects to `/login`. Do this against the Emulator first (`NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true`, `npm run emulators`, create a test user via the Emulator UI), then once against the real project.
+- **User still needs to:** enable Email/Password Auth in the console and create the one owner account (no signup UI exists by design), register a Web App, fill in `.env.local`'s five `NEXT_PUBLIC_FIREBASE_*` values, and deploy `firestore.rules` to the real project if not already deployed.
 
 ## Next
 

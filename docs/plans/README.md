@@ -8,7 +8,7 @@ This folder holds one detailed, execution-ready plan per implementation phase �
 
 | Plan | Phase | Status |
 |---|---|---|
-| [plan-1.md](plan-1.md) | Phase 1 — Core Map | Track A complete; Track B blocked on Firebase project creation (user action) |
+| [plan-1.md](plan-1.md) | Phase 1 — Core Map | Track A complete. Track B built (2026-08-22): Firebase Auth + real Project CRUD + map-state persistence. Interactive verification pending — user still needs to enable Auth/populate `.env.local` in the console. |
 | [plan-2.md](plan-2.md) | Phase 2 — Drawing | Track A built. Map-sizing layout bug (canvas stuck at 300px height) — root cause found and fixed 2026-08-18 (CSS cascade conflict with maplibre-gl.css). Track B blocked on Firebase. |
 | [plan-3.md](plan-3.md) | Phase 3 — Image Overlay | Track A built (upload, corner drag, opacity, lock). Track B blocked on Firebase Storage. |
 | [plan-4.md](plan-4.md) | Phase 4 — Data Import/Export | Track A built (GeoJSON import/export, atomic + capped, lossless round-trip via `plotlensType`). No Track B needed — client-side only. |

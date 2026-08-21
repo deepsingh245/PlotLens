@@ -7,11 +7,7 @@ const LABEL: Record<SaveStatus, string> = {
   error: "Save failed",
 };
 
-/**
- * Track A: driven by a prop. Track B wires this to
- * useMapStatePersistence's real status — see docs/plans/plan-1.md.
- * Never show a static "Saved" that isn't tied to a real write result.
- */
+/** Driven by useMapStatePersistence's real status (ProjectWorkspace.tsx) — never a static "Saved". */
 export function SaveStatusIndicator({ status = "idle" }: { status?: SaveStatus }) {
   if (status === "idle") return null;
 

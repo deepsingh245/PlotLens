@@ -11,24 +11,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ImportGeoJsonDialog } from "@/components/projects/ImportGeoJsonDialog";
+import { DeleteProjectDialog } from "./DeleteProjectDialog";
 import { exportAnnotationsToGeoJson } from "@/gis/geojsonImportExport";
 import type { Annotation, NewAnnotationInput } from "@/projects/annotations/types";
 
-/**
- * Track A: "Delete Project" is a no-op stub. Track B wires it to a real
- * deleteDoc() call with a confirmation step — see docs/plans/plan-1.md
- * (hard delete, not archivedAt) and docs/DATA_RETENTION.md.
- */
+/** Hard delete, not archivedAt — see docs/plans/plan-1.md and docs/DATA_RETENTION.md. */
 export function ProjectMenu({
   annotations,
   projectName,
   onImportGeoJson,
+  onDeleteProject,
 }: {
   annotations: Annotation[];
   projectName: string;
   onImportGeoJson: (inputs: Omit<NewAnnotationInput, "projectId">[]) => Promise<void>;
+  onDeleteProject: () => void;
 }) {
   const [importOpen, setImportOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   function handleExport() {
     const json = exportAnnotationsToGeoJson(annotations);
@@ -61,12 +61,18 @@ export function ProjectMenu({
               {annotations.length === 0 ? "Add an annotation before exporting" : "Download this project's annotations as GeoJSON"}
             </TooltipContent>
           </Tooltip>
-          <DropdownMenuItem variant="destructive" disabled>
+          <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
             Delete Project
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <ImportGeoJsonDialog open={importOpen} onOpenChange={setImportOpen} onImport={onImportGeoJson} />
+      <DeleteProjectDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        onConfirm={onDeleteProject}
+        projectName={projectName}
+      />
     </>
   );
 }

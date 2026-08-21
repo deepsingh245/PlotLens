@@ -1,20 +1,14 @@
-import { notFound } from "next/navigation";
-import { ProjectWorkspace } from "@/components/projects/ProjectWorkspace";
-import { mockProjects } from "@/projects/mockProjects";
+import { ProjectWorkspaceLoader } from "@/components/projects/ProjectWorkspaceLoader";
 
-// Track A: looked up from mock data. Track B replaces this with a real
-// Firestore getProject() call — see docs/plans/plan-1.md.
+// Depends on the Firebase client SDK (useProject) — can't be statically
+// prerendered without real .env.local credentials at build time.
+export const dynamic = "force-dynamic";
+
 export default async function ProjectWorkspacePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const project = mockProjects.find((candidate) => candidate.id === id);
-
-  if (!project) {
-    notFound();
-  }
-
-  return <ProjectWorkspace project={project} />;
+  return <ProjectWorkspaceLoader projectId={id} />;
 }

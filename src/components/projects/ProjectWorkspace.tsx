@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Marker } from "maplibre-gl";
 import { TopBar } from "@/components/shell/TopBar";
 import { MapCanvas } from "@/components/map/MapCanvas";
@@ -27,6 +28,8 @@ import { useAnnotations } from "@/projects/annotations/useAnnotations";
 import { useOverlays } from "@/projects/overlays/useOverlays";
 import { useSavedViews } from "@/projects/savedViews/useSavedViews";
 import { useInvestigationEvents } from "@/projects/investigationEvents/useInvestigationEvents";
+import { useMapStatePersistence } from "@/projects/maps/useMapStatePersistence";
+import { deleteProject } from "@/storage/projects";
 import type { MapEngine } from "@/map/MapEngine";
 import type { SavedView } from "@/projects/savedViews/types";
 import type { GeocodeResult } from "@/app/api/geocode/route";
@@ -69,6 +72,7 @@ function computeDefaultCorners(engine: MapEngine): OverlayCorners {
  * docs/plans/plan-2.md's drawing tools.
  */
 export function ProjectWorkspace({ project }: { project: Project }) {
+  const router = useRouter();
   const [engine, setEngine] = useState<MapEngine | null>(null);
   const searchMarkerRef = useRef<Marker | null>(null);
   const textMarkersRef = useRef(new Map<string, Marker>());
@@ -84,6 +88,7 @@ export function ProjectWorkspace({ project }: { project: Project }) {
   const { overlays, loading: overlaysLoading, createOverlay, updateOverlay, deleteOverlay } = useOverlays(project.id);
   const { savedViews, createSavedView, deleteSavedView } = useSavedViews(project.id);
   const { events, createEvent } = useInvestigationEvents(project.id);
+  const saveStatus = useMapStatePersistence(engine, project.id);
 
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
@@ -412,6 +417,11 @@ export function ProjectWorkspace({ project }: { project: Project }) {
     setSelectedOverlayId(null);
   }
 
+  async function handleDeleteProject() {
+    await deleteProject(project.id);
+    router.push("/");
+  }
+
   const selectedAnnotation = annotations.find((a) => a.id === selectedAnnotationId) ?? null;
   const selectedOverlay = overlays.find((o) => o.id === selectedOverlayId) ?? null;
 
@@ -419,10 +429,12 @@ export function ProjectWorkspace({ project }: { project: Project }) {
     <div className="flex min-h-0 flex-1 flex-col">
       <TopBar
         projectName={project.name}
+        saveStatus={saveStatus}
         onSearchSelect={handleSearchSelect}
         annotations={annotations}
         onImportGeoJson={handleImportGeoJson}
         onOpenHistory={() => setHistoryOpen(true)}
+        onDeleteProject={handleDeleteProject}
       />
       <div className="flex min-h-0 flex-1">
         <LayersPanel collapsed={layersPanelCollapsed} onCollapsedChange={setLayersPanelCollapsed} />

@@ -15,3 +15,22 @@ export interface Project {
   updatedAt: string;
   archivedAt: string | null;
 }
+
+export interface NewProjectInput {
+  ownerId: string;
+  name: string;
+  description?: string;
+  map: ProjectMapState;
+}
+
+export interface UseProjectsResult {
+  projects: Project[];
+  loading: boolean;
+  createProject: (input: NewProjectInput) => Promise<Project>;
+  deleteProject: (id: string) => Promise<void>;
+}
+
+export interface UseProjectResult {
+  project: Project | null;
+  loading: boolean;
+}
