@@ -2,6 +2,38 @@
 
 All notable changes to PlotLens are recorded here. Format loosely follows Keep a Changelog; dates are `YYYY-MM-DD`.
 
+## 2026-09-13 (later) — Security: patch two critical/high dependency advisories
+
+### Fixed
+
+- `next`: pinned version bumped `16.3.0` → `16.3.5` (patch release, not a range change — `npm audit` flagging it "outside the stated dependency range" was just because `package.json` pins an exact version). Fixes two **critical** unauthenticated-RCE advisories: [GHSA-p293-qw3h-jr36](https://github.com/advisories/GHSA-p293-qw3h-jr36) (Windows-hosted servers) and [GHSA-2xp9-vwfh-vxw4](https://github.com/advisories/GHSA-2xp9-vwfh-vxw4) (Image Optimization API, AVIF files).
+- `maplibre-gl`: `^6.2.0` → `^6.9.0`. Fixes a **critical** XSS sanitizer bypass ([GHSA-jrc7-96c5-q579](https://github.com/advisories/GHSA-jrc7-96c5-q579), CVSS 10) affecting all versions ≤6.4.0. `terra-draw-maplibre-gl-adapter`'s peer range (`>=4`) allows this without an adapter change.
+- `npm audit`: 20 vulnerabilities (2 critical) → 17 (0 critical, 2 high). The remaining 17 are all transitive dev-tooling (`eslint`, `firebase-tools`, `shadcn` CLI trees) that never ship to the browser or production server — fixing them needs `npm audit fix --force`, which would downgrade `firebase-tools` to `10.1.1` (breaking), so left alone; nothing user-facing remains.
+- Verified `tsc`/`lint`/`vitest` (89/89)/`build` all clean against the new versions.
+
+## 2026-09-13 — Phase 7: nearest-feature + polygon overlap analysis
+
+### Added
+
+- `src/gis/spatialAnalysis.ts` (+ 9 tests): `distanceFromPointToGeometry` (real point-to-point/point-to-line/point-to-polygon-boundary distance via `@turf/distance`, `@turf/point-to-line-distance`, `@turf/boolean-point-in-polygon` — zero when the point is inside the polygon, never a centroid-to-centroid shortcut), `findNearestAnnotation` (nearest *other* annotation to a Point annotation), and `findPolygonOverlaps` (real intersection area between two polygon annotations via `@turf/intersect`, not a boolean-only "do they touch"). New deps: `@turf/distance`, `@turf/point-to-line-distance`, `@turf/boolean-point-in-polygon`, `@turf/intersect` — same "small focused package, not the `@turf/turf` meta-package" precedent as Phase 7's original `@turf/length`/`@turf/area`.
+- `src/components/annotations/AnnotationForm.tsx`: a Point annotation gets a "Find nearest annotation" action; a Polygon (or Circle, which stores as Polygon) annotation gets "Check overlaps", listing every other polygon it actually intersects with real overlap area. `AnnotationPanel`/`AnnotationForm` now take an `otherAnnotations` prop (every other annotation in the project) as the candidate pool; wired from `ProjectWorkspace.tsx`.
+- `src/gis/measurement.ts`: extracted `squareMetersToAreaResult()` so `measureArea` and the new overlap-area calculation share one square-meters→hectares conversion instead of duplicating the constant.
+
+### Scope note
+
+Buffer/radius (also Phase 7 per `PRODUCT_REQUIREMENTS.md`) is deliberately **not** built this pass — `docs/design/MAP_INTERACTIONS.md` explicitly lists it under "Future — do not build before the MVP workflow is stable," and that hasn't been confirmed yet (interactive verification against a real Firebase project is still the open P0 item in `docs/ROADMAP.md`). Nearest-feature/intersection aren't named in that same gate and don't need an external dataset, so they're in scope; road-impact-style analysis against external layers (e.g. real road data) still needs Phase 6 (Bhuvan) first.
+
+Nearest-feature is scoped to a **Point** origin only — a Line/Polygon origin would need a genuine geometry-to-geometry closest-point search (a different, unbuilt feature), and this project's rule against approximating GIS results (`docs/GIS_ARCHITECTURE.md` §Measurement) rules out silently substituting a centroid.
+
+### Fixed
+
+- `vitest.integration.config.ts`: added `fileParallelism: false`. `tests/integration/firestore-rules.test.ts` and `storage-rules.test.ts` share one Firestore/Storage Emulator instance and project ID; running them in parallel let one file's `clearFirestore()` wipe a project doc the other file had just seeded (observed as a spurious `storage.rules` "Null value error" on the owner-upload case — the rule itself was correct, the test run wasn't isolated). `npm run test:rules` is now a reliable 26/26.
+- `src/map/useDrawingManager.ts` / `useOverlayManager.ts`: removed two stale `eslint-disable` comments (the `react-hooks/set-state-in-effect` rule doesn't fire on `setState` calls made from inside a named callback passed to an event listener, only on direct effect-body calls — these were never needed).
+
+### Status
+
+`tsc`/`lint`/`vitest` (89/89) and `npm run build` all clean. Interactive verification deferred at the user's explicit request (backend/browser QA to happen in a later pass, alongside the real Firebase project setup).
+
 ## 2026-09-07 — UI polish pass (pre-map screens)
 
 ### Added

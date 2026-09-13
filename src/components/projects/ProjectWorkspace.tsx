@@ -476,6 +476,7 @@ export function ProjectWorkspace({ project }: { project: Project }) {
         {selectedAnnotation && (
           <AnnotationPanel
             annotation={selectedAnnotation}
+            otherAnnotations={annotations.filter((a) => a.id !== selectedAnnotation.id)}
             autoFocusTitle={selectedAnnotation.id === justCreatedId}
             onClose={() => setSelectedAnnotationId(null)}
             onSave={(patch) => {

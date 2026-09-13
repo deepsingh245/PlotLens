@@ -31,7 +31,11 @@ export function measureDistance(geometry: LineString): DistanceResult {
 /** Geodesic area — accounts for Earth's curvature, not a flat/planar shoelace calculation. */
 export function measureArea(geometry: Polygon): AreaResult {
   const feature = { type: "Feature" as const, geometry, properties: {} };
-  const squareMeters = turfArea(feature);
+  return squareMetersToAreaResult(turfArea(feature));
+}
+
+/** Shared by measureArea and spatialAnalysis.ts's polygon-overlap area — same unit split, one constant. */
+export function squareMetersToAreaResult(squareMeters: number): AreaResult {
   return { squareMeters, hectares: squareMeters / SQUARE_METERS_PER_HECTARE };
 }
 

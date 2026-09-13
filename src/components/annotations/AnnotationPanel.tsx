@@ -15,12 +15,15 @@ import type { Annotation } from "@/projects/annotations/types";
  */
 export function AnnotationPanel({
   annotation,
+  otherAnnotations,
   autoFocusTitle = false,
   onClose,
   onSave,
   onDelete,
 }: {
   annotation: Annotation;
+  /** Every other annotation in the project — the candidate pool for nearest-feature/overlap analysis below. */
+  otherAnnotations: Annotation[];
   autoFocusTitle?: boolean;
   onClose: () => void;
   onSave: (patch: Pick<Annotation, "title" | "description" | "tags">) => void;
@@ -38,6 +41,7 @@ export function AnnotationPanel({
           <AnnotationForm
             key={annotation.id}
             annotation={annotation}
+            otherAnnotations={otherAnnotations}
             autoFocusTitle={autoFocusTitle}
             onSave={onSave}
             onDelete={onDelete}
@@ -63,7 +67,13 @@ export function AnnotationPanel({
           </Button>
         </CardTitle>
       </CardHeader>
-      <AnnotationForm annotation={annotation} autoFocusTitle={autoFocusTitle} onSave={onSave} onDelete={onDelete} />
+      <AnnotationForm
+        annotation={annotation}
+        otherAnnotations={otherAnnotations}
+        autoFocusTitle={autoFocusTitle}
+        onSave={onSave}
+        onDelete={onDelete}
+      />
     </Card>
   );
 }

@@ -1,6 +1,6 @@
 # Plan 7 — Phase 7: Spatial analysis (measurements)
 
-**Status:** Track A built (2026-08-17). Distance and area only — buffer/nearest-feature/intersection/road-impact are explicitly out of scope for this pass (see Scope). Written and implemented in the same session per the user's "continue all — dev only, but runnable" direction; verified via `tsc`/`lint`/`vitest`/`build` only, not yet interactively re-checked in a running browser (deferred — see [../PLANNING.md](../PLANNING.md) Phase 7's own note once added).
+**Status:** Distance + area built 2026-08-17. Nearest-feature + polygon overlap added 2026-09-13 (see "Nearest-feature + overlap (2026-09-13)" below). Buffer/radius remains out of scope — [../design/MAP_INTERACTIONS.md](../design/MAP_INTERACTIONS.md) gates it under "Future — do not build before the MVP workflow is stable," which hasn't cleared yet. Road-impact analysis against external layers stays blocked on Phase 6. Verified via `tsc`/`lint`/`vitest`/`build` only, not yet interactively re-checked in a running browser (deferred at the user's request — real Firebase project + browser QA are a later, separate pass).
 
 This is the detailed record for [../PLANNING.md](../PLANNING.md) Phase 7 / [../PRODUCT_REQUIREMENTS.md](../PRODUCT_REQUIREMENTS.md) roadmap item 7 ("distance/area/buffer/nearest/intersection/road-impact"). Depends on Phases 2–3 (drawing + the `DrawingManager`/Terra Draw wrapper this phase extends), both already built.
 
@@ -71,7 +71,18 @@ Same floating-label approach works at touch scale without a separate mobile bran
 ## Open questions / blockers
 
 - None novel to this phase — it needed no Firebase/provider prerequisite, unlike most other phases.
-- Buffer/nearest/intersection/road-impact remain designed-but-not-built (see Scope) — revisit once distance/area are confirmed solid interactively.
+- Buffer/road-impact remain designed-but-not-built (see Scope, and the 2026-09-13 update below) — buffer is explicitly gated by `../design/MAP_INTERACTIONS.md` until the MVP workflow is confirmed stable; road-impact needs Phase 6.
+
+## Nearest-feature + overlap (2026-09-13)
+
+**What changed:** nearest-feature and polygon-overlap analysis, scoped to the project's own annotations (no external dataset needed, so no Phase 6 dependency) — see [CHANGELOG.md](../../CHANGELOG.md) for the file-level detail. Buffer was considered in the same pass and deliberately not built — `../design/MAP_INTERACTIONS.md`'s "Future — do not build before the MVP workflow is stable" gate applies to it and hasn't cleared (interactive verification against a real Firebase project, `../ROADMAP.md`'s P0, is still open).
+
+**Scope decisions:**
+- Nearest-feature only runs from a **Point** annotation — a Line/Polygon origin would need a real geometry-to-geometry closest-point search (not built), and `../GIS_ARCHITECTURE.md` §Measurement's "never approximate" rule rules out quietly substituting a centroid.
+- Overlap only runs between **Polygon** annotations (Circle included — it stores as Polygon, see `../DATA_MODEL.md`) and reports the real intersection area (`@turf/intersect` + `@turf/area`), not a boolean-only yes/no.
+- No new persisted type — results render inline in `AnnotationPanel`/`AnnotationForm` and aren't saved, matching this plan's original "no new persisted type" decision for distance/area.
+
+**Verification:** `tsc`/`lint`/`vitest` (89/89, +9 for `spatialAnalysis.ts`)/`build` clean. Interactive verification not done this pass (explicitly deferred to the later Firebase-project + browser QA pass).
 
 ## Next
 

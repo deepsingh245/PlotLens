@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { DeleteAnnotationDialog } from "./DeleteAnnotationDialog";
 import { locationSummary } from "@/gis/annotationGeometry";
 import { formatCoordinate } from "@/lib/format";
+import { formatArea, formatDistance } from "@/gis/measurement";
+import { findNearestAnnotation, findPolygonOverlaps } from "@/gis/spatialAnalysis";
 import type { Annotation } from "@/projects/annotations/types";
 
 /**
@@ -20,11 +22,13 @@ import type { Annotation } from "@/projects/annotations/types";
  */
 export function AnnotationForm({
   annotation,
+  otherAnnotations,
   autoFocusTitle = false,
   onSave,
   onDelete,
 }: {
   annotation: Annotation;
+  otherAnnotations: Annotation[];
   autoFocusTitle?: boolean;
   onSave: (patch: Pick<Annotation, "title" | "description" | "tags">) => void;
   onDelete: () => void;
@@ -33,6 +37,8 @@ export function AnnotationForm({
   const [description, setDescription] = useState(annotation.description ?? "");
   const [tagsText, setTagsText] = useState(annotation.tags.join(", "));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [nearestResult, setNearestResult] = useState<{ label: string; distance: string } | "none" | null>(null);
+  const [overlapResults, setOverlapResults] = useState<{ label: string; area: string }[] | null>(null);
 
   function handleBlurSave() {
     const tags = tagsText
@@ -40,6 +46,22 @@ export function AnnotationForm({
       .map((tag) => tag.trim())
       .filter(Boolean);
     onSave({ title, description: description || undefined, tags });
+  }
+
+  function handleFindNearest() {
+    if (annotation.geometry.type !== "Point") return;
+    const result = findNearestAnnotation(annotation.geometry.coordinates, otherAnnotations);
+    setNearestResult(
+      result ? { label: result.annotation.title || "Untitled", distance: formatDistance(result.distance) } : "none",
+    );
+  }
+
+  function handleCheckOverlaps() {
+    if (annotation.geometry.type !== "Polygon") return;
+    const results = findPolygonOverlaps(annotation.geometry, otherAnnotations);
+    setOverlapResults(
+      results.map((r) => ({ label: r.annotation.title || "Untitled", area: formatArea(r.overlapArea) })),
+    );
   }
 
   return (
@@ -83,6 +105,44 @@ export function AnnotationForm({
           {formatCoordinate(locationSummary(annotation.geometry))}
         </p>
       </div>
+
+      {annotation.geometry.type === "Point" && (
+        <div className="flex flex-col gap-2">
+          <Label>Nearest annotation</Label>
+          <Button variant="outline" onClick={handleFindNearest} disabled={otherAnnotations.length === 0}>
+            Find nearest annotation
+          </Button>
+          {nearestResult === "none" && (
+            <p className="text-text-secondary text-xs">No other annotations in this project.</p>
+          )}
+          {nearestResult && nearestResult !== "none" && (
+            <p className="text-text-secondary font-mono text-xs">
+              {nearestResult.label} — {nearestResult.distance}
+            </p>
+          )}
+        </div>
+      )}
+
+      {annotation.geometry.type === "Polygon" && (
+        <div className="flex flex-col gap-2">
+          <Label>Overlaps</Label>
+          <Button variant="outline" onClick={handleCheckOverlaps} disabled={otherAnnotations.length === 0}>
+            Check overlaps
+          </Button>
+          {overlapResults?.length === 0 && (
+            <p className="text-text-secondary text-xs">No overlapping polygons found.</p>
+          )}
+          {overlapResults && overlapResults.length > 0 && (
+            <ul className="flex flex-col gap-1">
+              {overlapResults.map((result, index) => (
+                <li key={index} className="text-text-secondary font-mono text-xs">
+                  {result.label} — {result.area}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <Button variant="destructive" onClick={() => setConfirmingDelete(true)}>
         Delete

@@ -199,7 +199,7 @@ Full rationale and component/spacing/radius tokens: [design/DESIGN_SYSTEM.md](de
 
 **Exit criteria:** [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) §Measurements.
 
-**Detailed task plan:** [plans/plan-7.md](plans/plan-7.md). **Status: Track A built.** Distance + area only this pass (buffer/nearest/intersection/road-impact deferred, see that file); reuses `DrawingManager`'s existing line/polygon modes rather than a second Terra Draw instance, via a new `draft` event exposing live in-progress geometry. Automated checks (tsc/lint/tests/build) pass; interactive verification not yet done.
+**Detailed task plan:** [plans/plan-7.md](plans/plan-7.md). **Status: Track A built.** Distance + area (2026-08-17), reusing `DrawingManager`'s existing line/polygon modes rather than a second Terra Draw instance via a new `draft` event exposing live in-progress geometry; nearest-feature + polygon overlap over the project's own annotations added 2026-09-13. Buffer/radius remains deferred — [design/MAP_INTERACTIONS.md](design/MAP_INTERACTIONS.md) gates it until the MVP workflow is confirmed stable. Road-impact analysis stays blocked on Phase 6 (needs a real external layer to test against). Automated checks (tsc/lint/tests/build) pass; interactive verification not yet done.
 
 ---
 
