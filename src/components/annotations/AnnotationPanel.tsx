@@ -1,6 +1,8 @@
 "use client";
 
+import { X } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { AnnotationForm } from "./AnnotationForm";
@@ -48,16 +50,17 @@ export function AnnotationPanel({
   return (
     <Card className="w-72 shrink-0 overflow-y-auto rounded-none border-y-0 border-r-0">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          {annotation.title || "Untitled"}
-          <button
-            type="button"
+        <CardTitle className="flex items-center justify-between gap-2">
+          <span className="truncate">{annotation.title || "Untitled"}</span>
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
-            className="text-text-secondary hover:text-text-primary text-xs"
             aria-label="Close"
+            className="shrink-0"
           >
-            Close
-          </button>
+            <X className="size-4" />
+          </Button>
         </CardTitle>
       </CardHeader>
       <AnnotationForm annotation={annotation} autoFocusTitle={autoFocusTitle} onSave={onSave} onDelete={onDelete} />

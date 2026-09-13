@@ -1,31 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { createInvestigationEvent as createEventInStorage, listInvestigationEvents } from "@/storage/investigationEvents";
+import { createInvestigationEvent as createEventInStorage, subscribeToInvestigationEvents } from "@/storage/investigationEvents";
 import type { InvestigationEvent, NewInvestigationEventInput, UseInvestigationEventsResult } from "./types";
 
-/** Track A body — local useState, mirrors useAnnotations.ts/useOverlays.ts exactly. */
+/** Track B — live onSnapshot subscription, mirrors useAnnotations.ts/useOverlays.ts. */
 export function useInvestigationEvents(projectId: string): UseInvestigationEventsResult {
   const [events, setEvents] = useState<InvestigationEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
-    listInvestigationEvents(projectId).then((loaded) => {
-      if (!cancelled) {
-        setEvents(loaded);
-        setLoading(false);
-      }
+    return subscribeToInvestigationEvents(projectId, (loaded) => {
+      setEvents(loaded);
+      setLoading(false);
     });
-    return () => {
-      cancelled = true;
-    };
   }, [projectId]);
 
   const createEvent = useCallback(async (input: NewInvestigationEventInput) => {
-    const created = await createEventInStorage(input);
-    setEvents((current) => [...current, created]);
-    return created;
+    return createEventInStorage(input);
   }, []);
 
   return { events, loading, createEvent };

@@ -1,38 +1,46 @@
-import { mockSavedViews } from "@/projects/savedViews/mockSavedViews";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  onSnapshot,
+  setDoc,
+  type Unsubscribe,
+} from "firebase/firestore";
+import { db } from "@/lib/firebaseClient";
 import type { NewSavedViewInput, SavedView } from "@/projects/savedViews/types";
 
 /**
- * Track A body — in-memory only, seeded from mockSavedViews.ts. Same
- * "wholesale-replaced in Track B without changing call sites" contract as
- * storage/annotations.ts / storage/overlays.ts.
+ * Track B — real Firestore CRUD against `projects/{projectId}/savedViews`
+ * (see firestore.rules). Create/delete only — no update, matching
+ * UseSavedViewsResult's existing shape.
  */
-const store = new Map<string, SavedView[]>();
-
-function seedIfNeeded(projectId: string): SavedView[] {
-  if (!store.has(projectId)) {
-    store.set(
-      projectId,
-      mockSavedViews.filter((view) => view.projectId === projectId).map((v) => ({ ...v })),
-    );
-  }
-  return store.get(projectId)!;
+function savedViewsCollection(projectId: string) {
+  return collection(db, "projects", projectId, "savedViews");
 }
 
-function nextId(): string {
-  return crypto.randomUUID();
+function toSavedView(id: string, data: Record<string, unknown>): SavedView {
+  return { id, ...data } as SavedView;
 }
 
 export async function listSavedViews(projectId: string): Promise<SavedView[]> {
-  return [...seedIfNeeded(projectId)];
+  const snapshot = await getDocs(savedViewsCollection(projectId));
+  return snapshot.docs.map((snap) => toSavedView(snap.id, snap.data()));
+}
+
+export function subscribeToSavedViews(projectId: string, onChange: (savedViews: SavedView[]) => void): Unsubscribe {
+  return onSnapshot(savedViewsCollection(projectId), (snapshot) => {
+    onChange(snapshot.docs.map((snap) => toSavedView(snap.id, snap.data())));
+  });
 }
 
 export async function createSavedView(input: NewSavedViewInput): Promise<SavedView> {
-  const savedView: SavedView = { ...input, id: nextId(), createdAt: new Date().toISOString() };
-  seedIfNeeded(input.projectId).push(savedView);
-  return savedView;
+  const id = crypto.randomUUID();
+  const payload = { ...input, createdAt: new Date().toISOString() };
+  await setDoc(doc(savedViewsCollection(input.projectId), id), payload);
+  return { id, ...payload };
 }
 
 export async function deleteSavedView(projectId: string, id: string): Promise<void> {
-  const views = seedIfNeeded(projectId);
-  store.set(projectId, views.filter((v) => v.id !== id));
+  await deleteDoc(doc(savedViewsCollection(projectId), id));
 }

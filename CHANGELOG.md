@@ -2,6 +2,55 @@
 
 All notable changes to PlotLens are recorded here. Format loosely follows Keep a Changelog; dates are `YYYY-MM-DD`.
 
+## 2026-09-07 — UI polish pass (pre-map screens)
+
+### Added
+
+- **Configurable base-map style (reliable tile provider support).** `src/map/osmStyle.ts` gains `resolveMapStyle()`: when `NEXT_PUBLIC_MAP_STYLE_URL` is set it is used as a full MapLibre style JSON URL (e.g. MapTiler/Stadia — provider-agnostic), otherwise the app falls back to the OSM raster. `MapEngine` now uses `resolveMapStyle()`. This exists because the public `tile.openstreetmap.org` endpoint returns **HTTP 503 under active use** (confirmed live in the network log — it's rate-limited and flagged "not for heavy use"), which destabilizes the whole map (style never finishes loading → drawing tools don't initialize). Documented in `.env.example` and a new **MapTiler** entry in `docs/DATA_SOURCES.md` (status `experimental` — a human must confirm current ToS/quota and create a domain-restricted key before flipping to `verified`). No key is committed; the OSM fallback is unchanged when the var is unset.
+
+### Fixed
+
+- **Drawn shapes (line/polygon/circle/point) never appeared on the map.** `useMapEngine` exposes the `MapEngine` synchronously at map construction — *before* the MapLibre `load`/style-ready event — and `useDrawingManager` then created the `DrawingManager` (which calls `terraDraw.start()`) immediately. Terra Draw's MapLibre adapter can only attach its render layers once the style is loaded, so the layers silently failed to attach and nothing drew. `src/map/useDrawingManager.ts` now gates creation on `map.isStyleLoaded()` / `map.once("load", …)`. `src/map/useOverlayManager.ts` got the same gate (image overlays add raster layers with the identical requirement).
+- **Firestore nested-array rejection** on line/polygon/circle annotations and on image overlays. Firestore's client SDK refuses nested arrays (`setDoc() called with invalid data. Nested arrays are not supported`), and GeoJSON line/polygon coordinates (`[[lng,lat],…]`) and an overlay's four `[lng,lat]` corners are exactly that — so only single-vertex Point annotations were saving; everything else threw. Fixed at the storage boundary, leaving the rest of the app working with real geometry objects:
+  - `src/storage/annotations.ts`: geometry is serialized to a JSON string on write and rehydrated on read. The annotations rules validate ownership only (not geometry shape), so this is transparent to them. Point docs written before the fix (stored as an object) still read correctly.
+  - `src/storage/overlays.ts`: each corner is stored as a `{lng,lat}` object instead — an array of 4 objects is Firestore-native (not a nested array) **and** keeps `firestore.rules`' `coordinates.size() == 4` backstop meaningful (a JSON string would have defeated it; the rule was not touched). Converted back to `[lng,lat]` on read.
+  - `tests/integration/firestore-rules.test.ts`: overlay fixture updated to the new `{lng,lat}` corner shape (assertions unchanged).
+- `src/components/search/LocationSearch.tsx`: was rendering its own `<form>`, which produced invalid HTML / a hydration error ("`<form>` cannot be a descendant of `<form>`") whenever it's used inside another form — e.g. `NewProjectDialog`. Replaced the inner `<form>` with a plain container; Enter now calls the search directly and stops propagation so it can't submit an enclosing form, and the button is `type="button"`. Behavior (type → Enter/click → results) is unchanged.
+
+### Changed
+
+- `src/components/projects/ProjectsView.tsx`: Projects landing given a real header — brand mark + "PlotLens" title, a "Your land & property investigations" subtitle with a live project count, a bottom hairline, and a centered `max-w-5xl` content column (was a bare `<h1>` + list).
+- `src/components/projects/ProjectCard.tsx`: cards now show a `MapPin` accent, the optional description (2-line clamp), and a footer metadata row — monospace coordinate + a "last edited" relative time (`Clock` icon). Hover/focus now lifts the accent border and ring for a clearer affordance.
+- `src/components/projects/EmptyState.tsx` + `ProjectList.tsx`: empty state is now an inviting dashed-border panel with an icon, guidance copy, and its own working "New Map" CTA (takes `onCreate`), instead of two lines of muted text with no call to action.
+- `src/components/auth/LoginForm.tsx`: sign-in card gets the brand mark and a one-line product subtitle; title shortened to "Sign in".
+- `src/lib/format.ts`: added `formatRelativeDate()` for the card "last edited" metadata.
+
+All changes stay within the existing design tokens (`docs/design/DESIGN_SYSTEM.md`) — no new colors/spacing introduced; the brand accent stays reserved for marks/active/hover states, never a background fill. `tsc` clean. **Interactive (in-browser) verification pending** — same standing state as the Track B work below.
+
+- `src/components/annotations/AnnotationPanel.tsx`: desktop close control changed from a text "Close" link to an icon `Button` (X), matching the icon-button pattern used by every other panel/dialog; title now truncates instead of pushing the control off-row.
+
+### Added
+
+- `.env.local` (git-ignored): emulator-mode config so the app boots and is viewable against the local Firebase emulators without a real project.
+- `docs/ROADMAP.md`: forward-looking prioritized execution roadmap (critical path P0–P3 + the two human-only decisions), linked from `docs/START_HERE.md`. Non-duplicative — points at `plans/README.md`/`PLANNING.md` for status/overview rather than restating them.
+
+## 2026-08-22 (later) — Phase 2 Track B: real Firestore for annotations
+
+### Added
+
+- `firestore.rules`: new `projects/{projectId}/annotations/{annotationId}` match block. Ownership checked via a parent-project `get()` (`isProjectOwner()` — costs one extra read per request, the standard Firestore pattern for parent-scoped ownership per `docs/SECURITY.md`), plus a `projectId` tie-back check on create/update. Content/geometry validation stays client-side, matching this file's existing precedent for the top-level `Project` rules.
+- `tests/integration/firestore-rules.test.ts`: 4 new cases for the annotations subcollection (unauthenticated denied, owner CRUD succeeds, projectId-mismatch create denied, full cross-user IDOR denied) — 10 → 14 tests, still all passing against the Emulator.
+
+### Changed
+
+- `src/storage/annotations.ts`: Track A's in-memory `Map` body replaced with real Firestore calls against the new subcollection — same exported signatures as always (`listAnnotations`/`createAnnotation`/`createAnnotations`/`updateAnnotation`/`deleteAnnotation`), plus a new `subscribeToAnnotations` for the hook. `createAnnotations` uses a `writeBatch` to keep its existing all-or-nothing guarantee. Found and fixed a real gap Track A never had: `AnnotationForm.tsx` sends `description: undefined` when a user clears the field, which Firestore's `setDoc`/`updateDoc` reject outright — creates now omit undefined keys, updates map them to Firestore's `deleteField()` sentinel (which is also the semantically correct behavior — "cleared" should delete the field, not skip the write).
+- `src/projects/annotations/useAnnotations.ts`: swapped its one-shot `listAnnotations().then()` for a live `onSnapshot` subscription, dropping the local optimistic-patch-after-write code entirely (Firestore's local cache already updates the listener immediately on a local write, before the server round-trip) — this was already the documented Track B contract for this file.
+- Deleted `src/projects/annotations/mockAnnotations.ts` (no longer imported anywhere).
+
+### Status
+
+`tsc`/`lint`/`vitest` (80/80, unchanged) and `npm run test:rules` (14/14) clean. **Interactive verification not yet done** — same pending state as Phase 1 Track B, blocked on the user's console/`.env.local` setup, not on anything else. Phases 3 (needs Storage, its own larger task), 7, and 8 Track B remain, following the identical rules+storage+hook pattern demonstrated here.
+
 ## 2026-08-22 — Phase 1 Track B: real Firebase Auth + Project persistence
 
 ### Added

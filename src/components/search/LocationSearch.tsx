@@ -24,8 +24,7 @@ export function LocationSearch({
   const [results, setResults] = useState<GeocodeResult[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  async function runSearch() {
     if (!query.trim()) return;
 
     setStatus("loading");
@@ -47,19 +46,32 @@ export function LocationSearch({
     setQuery(result.label);
   }
 
+  // Deliberately NOT a <form> element: LocationSearch is used inside other
+  // forms (e.g. NewProjectDialog), and nested <form>s are invalid HTML / cause
+  // a hydration error. Enter triggers the search directly instead, and the
+  // keydown stops here so it never submits an enclosing form.
+  function handleKeyDown(event: React.KeyboardEvent) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      event.stopPropagation();
+      void runSearch();
+    }
+  }
+
   return (
     <div className="relative w-full max-w-sm">
-      <form onSubmit={handleSubmit} className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5">
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           className="h-7 text-sm"
         />
-        <Button type="submit" size="icon-sm" variant="ghost" aria-label="Search">
+        <Button type="button" size="icon-sm" variant="ghost" aria-label="Search" onClick={() => void runSearch()}>
           {status === "loading" ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
         </Button>
-      </form>
+      </div>
 
       {status === "error" && (
         <p className="text-destructive absolute top-full mt-1 text-xs">Search failed — try again.</p>

@@ -67,6 +67,7 @@ Two standing blockers explain most of the "Track B blocked" rows above: **no Fir
 - [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) — given/when/then done-criteria per feature.
 
 ### Execution planning
+- [ROADMAP.md](ROADMAP.md) — forward-looking, prioritized "what to build next and in what order" (critical path + blockers). Distinct from the two below: PLANNING is the per-phase overview, plans/README is the built-vs-blocked archive, ROADMAP is the prioritized next-actions view.
 - [PLANNING.md](PLANNING.md) — phase-by-phase overview (tech stack, theme, mobile-vs-web, component map) for every phase.
 - [plans/README.md](plans/README.md) — index of the per-phase task-level plans, with current status.
 - [plans/plan-1.md](plans/plan-1.md) through [plan-8.md](plans/plan-8.md) — one file per phase's actual build record (see the status table above for a summary of each).

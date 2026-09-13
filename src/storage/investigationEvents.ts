@@ -1,32 +1,37 @@
-import { mockInvestigationEvents } from "@/projects/investigationEvents/mockInvestigationEvents";
+import { collection, doc, getDocs, onSnapshot, setDoc, type Unsubscribe } from "firebase/firestore";
+import { db } from "@/lib/firebaseClient";
 import type { InvestigationEvent, NewInvestigationEventInput } from "@/projects/investigationEvents/types";
 
 /**
- * Track A body — in-memory only. Append-only (no update/delete) — "simple event
+ * Track B — real Firestore CRUD against `projects/{projectId}/investigationEvents`
+ * (see firestore.rules). Append-only (no update/delete) — "simple event
  * logging, not a full audit system" per docs/PROJECT_SPEC.md §25.
  */
-const store = new Map<string, InvestigationEvent[]>();
-
-function seedIfNeeded(projectId: string): InvestigationEvent[] {
-  if (!store.has(projectId)) {
-    store.set(
-      projectId,
-      mockInvestigationEvents.filter((event) => event.projectId === projectId).map((e) => ({ ...e })),
-    );
-  }
-  return store.get(projectId)!;
+function investigationEventsCollection(projectId: string) {
+  return collection(db, "projects", projectId, "investigationEvents");
 }
 
-function nextId(): string {
-  return crypto.randomUUID();
+function toInvestigationEvent(id: string, data: Record<string, unknown>): InvestigationEvent {
+  return { id, ...data } as InvestigationEvent;
 }
 
 export async function listInvestigationEvents(projectId: string): Promise<InvestigationEvent[]> {
-  return [...seedIfNeeded(projectId)];
+  const snapshot = await getDocs(investigationEventsCollection(projectId));
+  return snapshot.docs.map((snap) => toInvestigationEvent(snap.id, snap.data()));
+}
+
+export function subscribeToInvestigationEvents(
+  projectId: string,
+  onChange: (events: InvestigationEvent[]) => void,
+): Unsubscribe {
+  return onSnapshot(investigationEventsCollection(projectId), (snapshot) => {
+    onChange(snapshot.docs.map((snap) => toInvestigationEvent(snap.id, snap.data())));
+  });
 }
 
 export async function createInvestigationEvent(input: NewInvestigationEventInput): Promise<InvestigationEvent> {
-  const event: InvestigationEvent = { ...input, id: nextId(), timestamp: new Date().toISOString() };
-  seedIfNeeded(input.projectId).push(event);
-  return event;
+  const id = crypto.randomUUID();
+  const payload = { ...input, timestamp: new Date().toISOString() };
+  await setDoc(doc(investigationEventsCollection(input.projectId), id), payload);
+  return { id, ...payload };
 }

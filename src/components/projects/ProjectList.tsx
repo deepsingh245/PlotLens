@@ -1,10 +1,16 @@
 import { EmptyState } from "./EmptyState";
 import { ProjectCard } from "./ProjectCard";
-import type { Project } from "@/projects/types";
+import type { NewProjectInput, Project } from "@/projects/types";
 
-export function ProjectList({ projects }: { projects: Project[] }) {
+export function ProjectList({
+  projects,
+  onCreate,
+}: {
+  projects: Project[];
+  onCreate: (input: NewProjectInput) => Promise<Project>;
+}) {
   if (projects.length === 0) {
-    return <EmptyState />;
+    return <EmptyState onCreate={onCreate} />;
   }
 
   return (

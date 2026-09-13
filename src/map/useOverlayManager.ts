@@ -13,16 +13,28 @@ export function useOverlayManager(engine: MapEngine | null, options?: OverlayMan
   useEffect(() => {
     if (!engine) return;
 
-    const instance = new OverlayManager(engine.getMap());
-    // Not a "sync state to a changing prop" case (what this rule normally guards against) —
-    // `engine` starts null and this effect runs exactly once per real MapEngine instance,
-    // initializing OverlayManager the moment its dependency becomes available. Same accepted
-    // shape as useMapEngine.ts's own instance-creation effect and useDrawingManager.ts.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOverlayManager(instance);
+    const map = engine.getMap();
+    let instance: OverlayManager | null = null;
+
+    // Gate on the style being loaded — image overlays add raster sources/layers
+    // to the map, which the style must be ready for. Same fix as
+    // useDrawingManager.ts (Terra Draw layers). `engine` is exposed before the
+    // map's `load` event, so creating eagerly can add layers that never attach.
+    const create = () => {
+      instance = new OverlayManager(map);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setOverlayManager(instance);
+    };
+
+    if (map.isStyleLoaded()) {
+      create();
+    } else {
+      map.once("load", create);
+    }
 
     return () => {
-      instance.destroy();
+      map.off("load", create);
+      instance?.destroy();
       setOverlayManager(null);
     };
   }, [engine]);

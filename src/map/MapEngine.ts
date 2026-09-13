@@ -1,5 +1,5 @@
 import { Map as MapLibreMap, NavigationControl, ScaleControl } from "maplibre-gl";
-import { osmStyle } from "./osmStyle";
+import { resolveMapStyle } from "./osmStyle";
 import type { LngLat } from "@/gis/coordinates";
 
 export const DEFAULT_CENTER: LngLat = { lng: 78.9629, lat: 20.5937 }; // center of India
@@ -35,7 +35,9 @@ export class MapEngine {
 
     this.map = new MapLibreMap({
       container,
-      style: osmStyle,
+      // A full style URL (e.g. MapTiler) when NEXT_PUBLIC_MAP_STYLE_URL is set,
+      // else the OSM raster fallback — see resolveMapStyle in osmStyle.ts.
+      style: resolveMapStyle(),
       center: [center.lng, center.lat],
       zoom,
       bearing,

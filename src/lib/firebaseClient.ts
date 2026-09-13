@@ -1,6 +1,7 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { connectAuthEmulator, getAuth } from "firebase/auth";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { connectStorageEmulator, getStorage } from "firebase/storage";
 
 /**
  * Single Firebase client bootstrap — see docs/ARCHITECTURE.md and
@@ -20,14 +21,17 @@ const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 
 // Next.js Fast Refresh re-evaluates this module without a full page reload,
-// which would otherwise call connectFirestoreEmulator/connectAuthEmulator
-// twice and throw. A global flag survives Fast Refresh (module state doesn't).
+// which would otherwise call connectFirestoreEmulator/connectAuthEmulator/
+// connectStorageEmulator twice and throw. A global flag survives Fast Refresh
+// (module state doesn't).
 const emulatorState = globalThis as unknown as { __plotlensEmulatorConnected?: boolean };
 
 if (process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true" && !emulatorState.__plotlensEmulatorConnected) {
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
   connectAuthEmulator(auth, "http://127.0.0.1:9099");
+  connectStorageEmulator(storage, "127.0.0.1", 9199);
   emulatorState.__plotlensEmulatorConnected = true;
 }

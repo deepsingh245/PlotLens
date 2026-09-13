@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth/AuthProvider";
@@ -31,7 +31,12 @@ export function LoginForm() {
     <div className="flex flex-1 items-center justify-center p-8">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Sign in to PlotLens</CardTitle>
+          <div className="mb-1 flex items-center gap-2">
+            <span className="bg-brand-accent size-2.5 rounded-full" aria-hidden />
+            <span className="text-text-primary text-sm font-semibold tracking-tight">PlotLens</span>
+          </div>
+          <CardTitle>Sign in</CardTitle>
+          <CardDescription>Your personal GIS investigation workspace.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">

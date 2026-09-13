@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// See docs/SECURITY.md §Firebase security rules and docs/plans/plan-3.md Task 7.
+// Deny-by-default. Owner-only, mirroring firestore.rules' isProjectOwner() pattern
+// via the cross-service firestore.get() rules function. This is the real
+// enforcement point for image content-type/size — src/lib/fileValidation.ts's
+// client-side check is a UX nicety (fail fast, better error message), never
+// the trust boundary.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isProjectOwner(projectId) {
+      return request.auth != null
+        && firestore.get(/databases/(default)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+    }
+
+    match /projects/{projectId}/overlays/{overlayId}/{fileName} {
+      allow read: if isProjectOwner(projectId);
+      allow write: if isProjectOwner(projectId)
+        && request.resource.contentType.matches('image/jpeg|image/png')
+        && request.resource.size < 10 * 1024 * 1024;
+      allow delete: if isProjectOwner(projectId);
+    }
+
+    // Deny-by-default catch-all — anything not explicitly matched above is denied.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

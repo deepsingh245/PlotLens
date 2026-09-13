@@ -13,16 +13,29 @@ export function useDrawingManager(engine: MapEngine | null) {
   useEffect(() => {
     if (!engine) return;
 
-    const instance = new DrawingManager(engine.getMap());
-    // Not a "sync state to a changing prop" case (what this rule normally guards against) —
-    // `engine` starts null and this effect runs exactly once per real MapEngine instance,
-    // initializing DrawingManager the moment its dependency becomes available. Same accepted
-    // shape as useMapEngine.ts's own instance-creation effect.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDrawingManager(instance);
+    const map = engine.getMap();
+    let instance: DrawingManager | null = null;
+
+    // Terra Draw's MapLibre adapter can only add its render layers once the map
+    // style has finished loading. `engine` is exposed synchronously at map
+    // construction (before `load`), so creating the DrawingManager immediately
+    // meant Terra Draw's layers silently failed to attach — drawn shapes never
+    // appeared. Gate creation on the style being ready.
+    const create = () => {
+      instance = new DrawingManager(map);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDrawingManager(instance);
+    };
+
+    if (map.isStyleLoaded()) {
+      create();
+    } else {
+      map.once("load", create);
+    }
 
     return () => {
-      instance.destroy();
+      map.off("load", create);
+      instance?.destroy();
       setDrawingManager(null);
     };
   }, [engine]);

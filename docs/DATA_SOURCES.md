@@ -62,6 +62,40 @@ status: experimental
 notes: Acceptable for personal-prototype development. Before any usage beyond that, switch to a dedicated OSM-derived tile provider or commercial provider — see ARCHITECTURE.md and PROJECT_SPEC.md §5.
 ```
 
+### MapTiler (base map)
+
+```yaml
+provider: MapTiler
+dataset: base map (vector style + tiles, glyphs, sprites)
+service: MapLibre style JSON (vector tiles behind it)
+url: https://api.maptiler.com/maps/streets-v2/style.json?key=YOUR_MAPTILER_KEY  # set via NEXT_PUBLIC_MAP_STYLE_URL, never committed
+type: vector
+authentication: API key embedded in the style URL (browser-exposed; MUST be domain-restricted in the MapTiler account — see docs/SECURITY.md §API Key Security)
+attribution: "© MapTiler © OpenStreetMap contributors" — MapTiler's style ships this; it must remain visible (attributionControl is enabled in MapEngine)
+license: MapTiler Cloud Terms of Service (service) over ODbL/OpenStreetMap data
+commercial_use_allowed: per MapTiler plan — confirm against the current MapTiler ToS for the chosen plan before any non-personal use
+caching_allowed: per MapTiler ToS (client/browser caching normal; no bulk scraping)
+storage_allowed: no bulk/offline tile storage against the hosted endpoint
+derivative_data_allowed: subject to MapTiler ToS + ODbL attribution
+rate_limits: free tier ~100k map loads/month (confirm current quota in the MapTiler dashboard)
+usage_restrictions: keep the key domain-restricted; do not exceed plan quota; keep attribution visible
+crs: EPSG:3857 (Web Mercator)
+last_verified:          # FILL IN once a human confirms current MapTiler ToS + quota and creates a domain-restricted key
+status: experimental    # -> set to `verified` only after the above is actually confirmed
+notes: |
+  Opt-in reliable base map to replace the rate-limited public OSM raster fallback for
+  active development (which returns 503 under load). Wired generically: MapEngine uses
+  NEXT_PUBLIC_MAP_STYLE_URL (any MapLibre style JSON URL) when set, else the OSM raster.
+  So this is provider-agnostic — Stadia Maps or any other MapLibre-style provider works
+  the same way; MapTiler is just the documented example. To enable:
+    1. Create a free MapTiler account, make an API key, and DOMAIN-RESTRICT it
+       (add http://localhost:3000 for dev, plus any real deploy origin).
+    2. Put the full style URL (with the key) in .env.local as NEXT_PUBLIC_MAP_STYLE_URL.
+    3. Restart `npm run dev`.
+  Do NOT commit the key. Flip status to `verified` here once a human has confirmed the
+  current ToS/quota for the intended use.
+```
+
 ### Nominatim (OpenStreetMap Foundation)
 
 ```yaml

@@ -1,6 +1,6 @@
 # Plan 2 — Phase 2: Drawing
 
-**Status:** Track A built (2026-08-11) — drawing (point/line/polygon/circle via Terra Draw, text via a custom marker), the tool rail, the annotation contextual panel, and in-memory mock persistence are all built, type-checked, lint-clean, and unit-tested. **Track B (real Firestore persistence + rules) is still blocked** on the user creating a Firebase project — same blocker as [plan-1.md](plan-1.md); Tasks 3 and 5's real-Firestore halves are not started.
+**Status:** Track A built (2026-08-11). **Track B built (2026-08-22)** — real Firestore CRUD (`src/storage/annotations.ts`, subcollection `projects/{projectId}/annotations`), live `onSnapshot` in `useAnnotations.ts`, and the `firestore.rules` `annotations` match block + Emulator rules tests are all in. `tsc`/`lint`/`vitest` (80/80) and `npm run test:rules` (14/14, incl. 4 new annotation-subcollection cases) clean. Interactive drawing behavior in a real signed-in session is still pending user verification (see "Open questions / blockers").
 
 **Update (2026-08-11, interactive verification):** driving the app with a headless-Chromium script surfaced a real, previously-undetected bug: the map's container resolved to `height: 0` at runtime (MapLibre's canvas fell back to its 300px default), traced to a classic CSS issue — a flex item's `flex-grow`-derived size is a "used value," not a spec-"explicitly specified" height, so a `height: 100%` descendant several levels deep can silently resolve to `0`. Three fixes were applied: `MapEngine` now attaches a `ResizeObserver` (a genuine pre-existing gap, not just a workaround) plus a `requestAnimationFrame`-deferred resize call; `MapCanvas` renders `absolute inset-0` instead of `h-full w-full`; `ProjectWorkspace` wraps it in a `relative min-h-0 flex-1` container so the absolute positioning has a real box to size against.
 
@@ -56,9 +56,9 @@ This is a new dependency (see [../AGENTS.md](../../AGENTS.md) rule 9, "avoid unn
 
 ### 3. Annotation data layer (`src/projects/`, `src/storage/`)
 - [x] `Annotation` modeled for a Firestore subcollection (`projects/{projectId}/annotations/{annotationId}`) — types written in `src/projects/annotations/types.ts`; the real Firestore calls themselves are Track B (below).
-- [x] `src/storage/annotations.ts` — `createAnnotation`/`updateAnnotation`/`deleteAnnotation`/`listAnnotations(projectId)`, Track A body (in-memory `Map`, seeded from `mockAnnotations.ts`). Re-validates geometry via `annotationGeometry` before accepting — this is the actual security enforcement point.
-- [x] `src/projects/annotations/useAnnotations.ts` — Track A body (local `useState`, optimistic updates). Live `onSnapshot` is Track B.
-- [x] Built against an in-memory mock store first, per the "if Track B is still blocked" fallback — Firebase remains blocked as of this writing.
+- [x] `src/storage/annotations.ts` — `createAnnotation`/`createAnnotations`/`updateAnnotation`/`deleteAnnotation`/`listAnnotations`/`subscribeToAnnotations`, real Firestore body against `projects/{projectId}/annotations`. Still re-validates geometry via `annotationGeometry` before accepting (unchanged from Track A — this is the actual security enforcement point, not the rules layer). `createAnnotations` uses a `writeBatch` for atomicity. `undefined` patch values (e.g. clearing `description`) map to Firestore's `deleteField()` sentinel, not a rejected write. `mockAnnotations.ts` deleted.
+- [x] `src/projects/annotations/useAnnotations.ts` — Track B: live `onSnapshot` subscription, no more local optimistic patching (Firestore's local cache already updates the listener immediately on a local write).
+- [x] Firebase project now exists — Track B built directly, no mock-store fallback needed for this task.
 
 ### 4. Annotation contextual panel (`src/components/annotations/`)
 - [x] `AnnotationPanel.tsx` (+ `AnnotationForm.tsx`, `DeleteAnnotationDialog.tsx`) — title/description/tags/location, edit/delete. Desktop: `Card` as a real flex sibling (not floating — avoids the top-right `NavigationControl`). Mobile (`useMediaQuery`, `<768px`): `Sheet` with `side="bottom"`.
@@ -66,7 +66,8 @@ This is a new dependency (see [../AGENTS.md](../../AGENTS.md) rule 9, "avoid unn
 - [x] Freshly-placed `text` annotations auto-open the panel with the title field focused (`justCreatedId` state in `ProjectWorkspace.tsx`).
 
 ### 5. Firestore rules + Emulator tests for annotations
-- [ ] **Not started — blocked on Task 1's Firebase prerequisite (same as Phase 1).** `firestore.rules`' `annotations` subcollection match block and `tests/integration/annotations-rules.test.ts` are Track B work; see that section below for the exact rule/test shape planned.
+- [x] `firestore.rules`' `projects/{projectId}/annotations/{annotationId}` match block: ownership checked via a parent-project `get()` (`isProjectOwner()`), plus a `projectId` tie-back check on create/update so a doc can't be created/moved to claim a different parent. Content/geometry validation stays client-side, matching the rest of this file's own precedent.
+- [x] Rules tests added to the existing `tests/integration/firestore-rules.test.ts` (not a separate file — kept alongside the Project rules tests it depends on): unauthenticated denied, owner CRUD succeeds, projectId-mismatch create denied, full cross-user IDOR (read/update/delete/create) denied.
 
 ### 6. Undo/redo (should-have, not a Task 1–5 blocker)
 - [ ] A small history stack (last-N operations: create/edit/delete) scoped to the current drawing session, `Ctrl/Cmd+Z` / `Ctrl/Cmd+Shift+Z` — see [../design/MAP_INTERACTIONS.md](../design/MAP_INTERACTIONS.md) §Undo/redo ("should not be deferred indefinitely," but explicitly not a hard MVP blocker). Sequence this after Tasks 1–5 are working, not before.
@@ -101,18 +102,18 @@ Building on Phase 1's substitution precedent (ReUI's hosted registry paywalled a
 
 ## Security checklist for this phase (see ../SECURITY_TEST_PLAN.md)
 
-- [ ] Unauthenticated Firestore read on any `annotations` subcollection → denied. **(Track B — not yet applicable, no real Firestore rules deployed.)**
-- [ ] User A reads/edits/deletes User B's project's annotations → denied. **(Track B.)**
-- [x] No `allow read, write: if true` anywhere in `firestore.rules` (unchanged from Phase 1 — no annotations block added yet).
+- [x] Unauthenticated Firestore read on any `annotations` subcollection → denied (Emulator-tested).
+- [x] User A reads/edits/deletes User B's project's annotations → denied (Emulator-tested, full IDOR matrix incl. create).
+- [x] No `allow read, write: if true` anywhere in `firestore.rules`.
 - [x] Drawn geometry is validated (type, coordinate bounds/count) before being written — `createAnnotation`/`updateAnnotation` in `src/storage/annotations.ts` call `validateDrawnFeature` before accepting anything, never trusting Terra Draw's raw output as pre-sanitized.
 
 ## Exit criteria
 
-[../ACCEPTANCE_CRITERIA.md](../ACCEPTANCE_CRITERIA.md) §Drawing, in full: every annotation type renders at the correct geographic location, persists on save, survives reload, and can be edited or deleted afterward. **Not yet met** — "survives reload" needs Track B (real Firestore); everything else is built and passing automated checks (build/lint/typecheck/unit tests) plus a basic manual smoke test (dev server, tool-rail buttons render, no runtime errors). Full interactive drawing (actually dragging vertices, resizing a circle, touch behavior) has **not** been manually verified in a real browser this session — flagged as the next thing to check, not assumed working.
+[../ACCEPTANCE_CRITERIA.md](../ACCEPTANCE_CRITERIA.md) §Drawing, in full: every annotation type renders at the correct geographic location, persists on save, survives reload, and can be edited or deleted afterward. **Code complete, not yet interactively verified against a real signed-in session** — "survives reload" is now backed by real Firestore, but hasn't been clicked through in a browser this pass (same pending-verification state as Phase 1's Track B).
 
 ## Open questions / blockers
 
-- **Firebase project not yet created — blocks all of Track B** (Task 3's real persistence, Task 5's rules/tests). Same user action items as [plan-1.md](plan-1.md).
+- **Interactive verification needed**, same session as Phase 1's: draw each annotation type, confirm it persists across reload, edit/delete it, and confirm a second browser/account can't see it. Do this once Phase 1's console/`.env.local` setup is done.
 - **Interactive drawing behavior needs real manual verification** (drag vertices, circle resize via `scaleable`, touch support) — automated checks confirm the code compiles and the static markup renders, not that Terra Draw's runtime interaction actually behaves as designed.
 - Undo/redo (Task 6) not started — correctly sequenced last, per this doc's own instruction.
 
