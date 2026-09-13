@@ -23,7 +23,6 @@ export function useDrawingManager(engine: MapEngine | null) {
     // appeared. Gate creation on the style being ready.
     const create = () => {
       instance = new DrawingManager(map);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDrawingManager(instance);
     };
 

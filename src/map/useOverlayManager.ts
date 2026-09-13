@@ -22,7 +22,6 @@ export function useOverlayManager(engine: MapEngine | null, options?: OverlayMan
     // map's `load` event, so creating eagerly can add layers that never attach.
     const create = () => {
       instance = new OverlayManager(map);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOverlayManager(instance);
     };
 

@@ -9,6 +9,12 @@ export default defineConfig({
     environment: "node",
     include: ["tests/integration/**/*.test.ts"],
     testTimeout: 20000,
+    // All integration files share one Firestore/Storage Emulator instance and
+    // project ID. Running files in parallel lets one file's clearFirestore()
+    // wipe data another file just seeded (observed: storage-rules.test.ts's
+    // seeded project doc disappearing mid-run because of a concurrent
+    // firestore-rules.test.ts beforeEach) — so these must run sequentially.
+    fileParallelism: false,
   },
   resolve: {
     alias: {
